@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Hotel extends Model
+class RoomType extends Model
 {
     use HasFactory;
 
@@ -17,15 +17,11 @@ class Hotel extends Model
      */
     protected $fillable = [
         'name',
-        'address',
-        'city',
-        'country',
-        'nit',
-        'rooms_total',
+        'description',
     ];
 
     /**
-     * Get the room configurations for the hotel.
+     * Get the room configurations that use this room type.
      *
      * @return HasMany
      */

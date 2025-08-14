@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\UserService;
+use App\Services\UserServiceInterface;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
 
@@ -12,7 +14,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \App\Repositories\HotelRepositoryInterface::class,
+            \App\Repositories\HotelRepository::class
+        );
+
+        $this->app->bind(
+            \App\Services\HotelServiceInterface::class,
+            \App\Services\HotelService::class
+        );
+
+        // Esto le dice a Laravel: "Cuando veas la interfaz 'UserServiceInterface',
+        // usa la clase concreta 'UserService' para resolverla."
+        $this->app->bind(UserServiceInterface::class, UserService::class);
     }
 
     /**

@@ -18,16 +18,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-
-            $table->foreignId('role_id')
-                ->constrained('roles')
-                ->onUpdate('cascade')
-                ->onDelete('restrict'); // no se elimina un rol en uso
-
             $table->rememberToken();
-            $table->timestamps();
 
-            $table->index('role_id');
+            // Campo para el rol, sin la restricción de clave foránea.
+            // Es nullable para que un usuario pueda no tener rol asignado.
+            $table->unsignedBigInteger('role_id')->nullable();
+
+            $table->timestamps();
         });
     }
 
