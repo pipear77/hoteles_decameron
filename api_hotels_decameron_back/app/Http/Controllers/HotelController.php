@@ -9,15 +9,7 @@ use Illuminate\Http\JsonResponse;
 
 class HotelController extends Controller
 {
-    private HotelServiceInterface $hotelService;
-
-    /**
-     * Inyectamos el servicio de hoteles en el constructor.
-     */
-    public function __construct(HotelServiceInterface $hotelService)
-    {
-        $this->hotelService = $hotelService;
-    }
+    public function __construct(private HotelServiceInterface $hotelService) {}
 
     /**
      * Muestra una lista de todos los hoteles.
@@ -33,7 +25,7 @@ class HotelController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $hotel = $this->hotelService->findById($id);
+        $hotel = $this->hotelService->getById($id);
 
         if (!$hotel) {
             return response()->json(['message' => 'Hotel not found'], 404);
@@ -44,7 +36,6 @@ class HotelController extends Controller
 
     /**
      * Almacena un hotel recién creado.
-     * La validación se maneja en StoreHotelRequest.
      */
     public function store(StoreHotelRequest $request): JsonResponse
     {
@@ -55,7 +46,6 @@ class HotelController extends Controller
 
     /**
      * Actualiza un hotel específico en el almacenamiento.
-     * La validación se maneja en UpdateHotelRequest.
      */
     public function update(UpdateHotelRequest $request, int $id): JsonResponse
     {

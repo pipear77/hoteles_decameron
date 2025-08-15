@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRoomTypeRequest extends FormRequest
 {
@@ -22,7 +23,14 @@ class UpdateRoomTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['string', 'max:255', 'unique:room_types,name,' . $this->route('room_type')],
+            'name' => [
+                'sometimes', // Solo valida si el campo está presente en la petición
+                'string',
+                'max:255',
+                Rule::unique('room_types')->ignore($this->route('room_type')),
+            ],
+            // El campo 'description' es opcional y se valida si está presente.
+            'description' => ['sometimes', 'string', 'max:500'],
         ];
     }
 }

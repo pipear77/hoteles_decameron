@@ -3,22 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateUserRequest;
-use App\Models\User;
 use App\Services\UserServiceInterface;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class UserController extends Controller
-{private UserServiceInterface $userService;
-
-    public function __construct(UserServiceInterface $userService)
-    {
-        // Inyección de dependencias para el servicio de usuarios.
-        // Esto garantiza la separación de responsabilidades.
-        $this->userService = $userService;
-    }
+{
+    public function __construct(
+        private UserServiceInterface $userService
+    ) {}
 
     /**
      * Muestra una lista de todos los usuarios.
@@ -53,7 +49,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Usuario no encontrado.'], 404);
         }
 
-        return response()->json($user);
+        return response()->json($user->load('role'));
     }
 
     /**
@@ -74,7 +70,7 @@ class UserController extends Controller
 
             return response()->json([
                 'message' => 'Usuario actualizado exitosamente.',
-                'user' => $user
+                'user' => $user->load('role'),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -86,27 +82,28 @@ class UserController extends Controller
     }
 
     /**
-     * Asigna un único rol a un usuario.
+     * Asigna un rol a un usuario.
+     * Se delega la lógica de negocio al servicio.
      *
      * @param Request $request El request conteniendo el role_id.
      * @param int $id El ID del usuario.
      */
-    public function assignRole(Request $request, int $id): JsonResponse
+    public function updateRole(Request $request, int $id): JsonResponse
     {
         try {
             $request->validate(['role_id' => 'required|exists:roles,id']);
 
-            $user = User::findOrFail($id);
-            $user->role_id = $request->role_id;
-            $user->save();
-            $user->load('role');
+            $user = $this->userService->updateUserRole($id, $request->role_id);
 
             return response()->json([
                 'message' => 'Rol asignado exitosamente.',
-                'user' => $user,
+                'user' => $user->load('role'),
             ], 200);
-        } catch (ModelNotFoundException $e) {
+
+        } catch (NotFoundHttpException $e) {
             return response()->json(['message' => 'Usuario no encontrado.'], 404);
+        } catch (AccessDeniedHttpException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
         } catch (\Exception $e) {
             Log::error("Error al asignar rol: {$e->getMessage()}");
             return response()->json([
@@ -124,14 +121,14 @@ class UserController extends Controller
     public function destroy(int $id): JsonResponse
     {
         try {
-            $user = User::findOrFail($id);
-            $user->delete();
+            $deleted = $this->userService->deleteUser($id);
+            if (!$deleted) {
+                return response()->json(['message' => 'Usuario no encontrado.'], 404);
+            }
 
             return response()->json([
                 'message' => 'Usuario eliminado exitosamente',
             ], 200);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Usuario no encontrado.'], 404);
         } catch (\Exception $e) {
             Log::error("Error al eliminar usuario: {$e->getMessage()}");
             return response()->json([

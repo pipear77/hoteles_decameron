@@ -13,7 +13,6 @@ class AccommodationService implements AccommodationServiceInterface
 {
     public function __construct(
         private AccommodationRepositoryInterface $repository,
-        private RoomTypeRepositoryInterface $roomTypeRepository
     ) {}
 
     /**
@@ -24,17 +23,6 @@ class AccommodationService implements AccommodationServiceInterface
     public function getAll(): Collection
     {
         return $this->repository->all();
-    }
-
-    /**
-     * Obtener las acomodaciones de un hotel específico.
-     *
-     * @param Hotel $hotel
-     * @return Collection<int, Accommodation>
-     */
-    public function getByHotel(Hotel $hotel): Collection
-    {
-        return $this->repository->getByHotel($hotel);
     }
 
     /**
@@ -55,32 +43,8 @@ class AccommodationService implements AccommodationServiceInterface
      * @param array $data
      * @return Accommodation
      */
-    public function create(int $hotelId, array $data): Accommodation
+    public function create(array $data): Accommodation
     {
-        // 1. Obtener el tipo de habitación para validar las acomodaciones permitidas.
-        $roomType = $this->roomTypeRepository->find($data['room_type_id']);
-
-        if (!$roomType) {
-            throw new ValidationException('El tipo de habitación no es válido.');
-        }
-
-        // 2. Validar que la acomodación sea válida para el tipo de habitación
-        // según los criterios del documento.
-        $accommodationMap = [
-            'Estándar' => ['Sencilla', 'Doble'],
-            'Junior'   => ['Triple', 'Cuádruple'],
-            'Suite'    => ['Sencilla', 'Doble', 'Triple'],
-        ];
-
-        // Se lanza una excepción si la acomodación no está permitida.
-        if (!in_array($data['accommodation'], $accommodationMap[$roomType->name])) {
-            throw ValidationException::withMessages([
-                'accommodation' => "La acomodación '{$data['accommodation']}' no es válida para el tipo de habitación '{$roomType->name}'."
-            ]);
-        }
-
-        // 3. Delegar la creación de la acomodación al repositorio.
-        $data['hotel_id'] = $hotelId;
         return $this->repository->create($data);
     }
 

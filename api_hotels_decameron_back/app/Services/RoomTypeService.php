@@ -32,13 +32,37 @@ class RoomTypeService implements RoomTypeServiceInterface
     }
 
     /**
-     * Encontrar un tipo de habitación por su nombre.
+     * Crear un nuevo tipo de habitación para un hotel.
      *
-     * @param string $name
+     * @param int $hotelId
+     * @param array $data
+     * @return RoomType
+     */
+    public function create(array $data): RoomType
+    {
+        return $this->repository->create($data);
+    }
+
+    /**
+     * Actualizar un tipo de habitación existente.
+     *
+     * @param int $id
+     * @param array $data
      * @return RoomType|null
      */
-    public function findByName(string $name): ?RoomType
+    public function update(int $id, array $data): ?RoomType
     {
-        return $this->repository->findByName($name);
+        return $this->repository->update($id, $data);
+    }
+
+    /**
+     * Eliminar un tipo de habitación.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function delete(int $id): bool
+    {
+        return $this->repository->delete($id);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Accommodation;
 use Illuminate\Database\Eloquent\Collection;
+use App\Models\Hotel;
 
 class AccommodationRepository implements AccommodationRepositoryInterface
 {
@@ -15,17 +16,6 @@ class AccommodationRepository implements AccommodationRepositoryInterface
     public function all(): Collection
     {
         return Accommodation::all();
-    }
-
-    /**
-     * Obtener las acomodaciones de un hotel.
-     *
-     * @param Hotel $hotel
-     * @return Collection<int, Accommodation>
-     */
-    public function getByHotel(Hotel $hotel): Collection
-    {
-        return $hotel->accommodations;
     }
 
     /**

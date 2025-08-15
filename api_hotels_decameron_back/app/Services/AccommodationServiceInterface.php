@@ -16,14 +16,6 @@ interface AccommodationServiceInterface
     public function getAll(): Collection;
 
     /**
-     * Obtener las acomodaciones de un hotel específico.
-     *
-     * @param Hotel $hotel
-     * @return Collection<int, Accommodation>
-     */
-    public function getByHotel(Hotel $hotel): Collection;
-
-    /**
      * Encontrar una acomodación por su ID.
      *
      * @param int $id
@@ -34,11 +26,10 @@ interface AccommodationServiceInterface
     /**
      * Crear una nueva acomodación para un hotel.
      *
-     * @param int $hotelId
      * @param array $data
      * @return Accommodation
      */
-    public function create(int $hotelId, array $data): Accommodation;
+    public function create(array $data): Accommodation;
 
     /**
      * Actualizar una acomodación existente.

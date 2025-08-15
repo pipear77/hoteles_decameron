@@ -31,7 +31,7 @@ class RoomTypeController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $roomType = $this->roomTypeService->findById($id);
+        $roomType = $this->roomTypeService->find($id);
 
         if (!$roomType) {
             return response()->json(['message' => 'Room type not found'], 404);

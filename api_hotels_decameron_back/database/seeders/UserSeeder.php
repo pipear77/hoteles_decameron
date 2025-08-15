@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,23 +11,29 @@ class UserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * @return void
      */
     public function run(): void
     {
-        User::create([
-            'first_name' => 'Admin',
-            'last_name' => 'Principal',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password123'),
-            'role_id' => 1 // Asume que admin es ID 1
-        ]);
+        // Limpia la tabla de usuarios para evitar duplicados en cada ejecución.
+        User::truncate();
 
-        User::create([
-            'first_name' => 'Usuario',
-            'last_name' => 'Prueba',
-            'email' => 'user@example.com',
-            'password' => Hash::make('password123'),
-            'role_id' => 2 // Asume que user es ID 2
-        ]);
+        // Obtiene el rol de 'admin' para asegurar la asignación correcta.
+        $adminRole = Role::where('name', 'admin')->first();
+
+        // Verifica que el rol de admin exista antes de crear el usuario.
+        if ($adminRole) {
+            User::create([
+                'first_name' => 'Admin',
+                'last_name' => 'Principal',
+                'email' => 'admin@example.com',
+                'password' => Hash::make('password123'),
+                'role_id' => $adminRole->id,
+            ]);
+        } else {
+            // Manejo de error si el rol de admin no se encuentra, lo que indica un problema de orden en los seeders.
+            $this->command->error('El rol "admin" no fue encontrado. Asegúrate de ejecutar el RoleSeeder primero.');
+        }
     }
 }

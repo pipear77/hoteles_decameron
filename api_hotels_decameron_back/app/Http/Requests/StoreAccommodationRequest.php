@@ -21,8 +21,11 @@ class StoreAccommodationRequest extends FormRequest
      */
     public function rules(): array
     {
+        // El campo 'name' es requerido y único al crear un registro.
         return [
             'name' => ['required', 'string', 'max:255', 'unique:accommodations,name'],
+            'description' => ['nullable', 'string', 'max:500'], // La descripción puede ser opcional
         ];
+
     }
 }

@@ -15,6 +15,14 @@ interface RoomTypeRepositoryInterface
     public function all(): Collection;
 
     /**
+     * Crear una nuevo tipo de habitación.
+     *
+     * @param array $data
+     * @return RoomType
+     */
+    public function create(array $data): RoomType;
+
+    /**
      * Encontrar un tipo de habitación por su ID.
      *
      * @param int $id
@@ -23,10 +31,20 @@ interface RoomTypeRepositoryInterface
     public function find(int $id): ?RoomType;
 
     /**
-     * Encontrar un tipo de habitación por su nombre.
+     * Actualizar un tipo de habitación.
      *
-     * @param string $name
+     * @param int $id
+     * @param array $data
      * @return RoomType|null
      */
-    public function findByName(string $name): ?RoomType;
+    public function update(int $id, array $data): ?RoomType;
+
+
+    /**
+     * Metodo para eliminar un tipo de habitación
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function delete(int $id): bool;
 }

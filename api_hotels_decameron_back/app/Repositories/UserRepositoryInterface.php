@@ -46,4 +46,12 @@ interface UserRepositoryInterface
      * @return User|null
      */
     public function update(int $id, array $data): ?User;
+
+    /**
+     * Elimina un usuario por su ID.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function delete(int $id): bool;
 }

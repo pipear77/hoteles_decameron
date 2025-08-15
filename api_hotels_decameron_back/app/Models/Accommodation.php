@@ -27,6 +27,6 @@ class Accommodation extends Model
      */
     public function hotelRooms(): HasMany
     {
-        return $this->hasMany(HotelRoom::class);
+        return $this->hasMany(HotelRoomConfiguration::class);
     }
 }

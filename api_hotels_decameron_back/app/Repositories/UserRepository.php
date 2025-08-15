@@ -16,7 +16,9 @@ class UserRepository implements UserRepositoryInterface
      */
     public function all(): Collection
     {
-        return User::all();
+        // Se carga la relación 'role' para evitar el problema de N+1
+        // y tener el rol disponible al obtener todos los usuarios.
+        return User::with('role')->get();
     }
 
     /**
@@ -64,14 +66,27 @@ class UserRepository implements UserRepositoryInterface
         $user = $this->find($id);
 
         if ($user) {
-            // Si la contraseña está presente en la petición, la hasheamos.
-            if (isset($data['password'])) {
-                $data['password'] = Hash::make($data['password']);
-            }
-            // Eloquent actualizará solo los campos presentes en el array $data.
+            // El servicio ya se encarga de hashear la contraseña.
+            // La lógica de negocio está en el lugar correcto.
             $user->update($data);
         }
 
         return $user;
+    }
+
+    /**
+     * Elimina un usuario por su ID.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function delete(int $id): bool
+    {
+        $user = $this->find($id);
+        if ($user) {
+            return $user->delete();
+        }
+
+        return false;
     }
 }

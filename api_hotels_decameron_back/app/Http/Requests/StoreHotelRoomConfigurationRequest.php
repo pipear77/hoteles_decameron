@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateHotelRoomRequest extends FormRequest
+class StoreHotelRoomConfigurationRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,23 +22,22 @@ class UpdateHotelRoomRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Usa la tabla con el nombre corregido.
         return [
-            // La validación de unicidad excluye la configuración de habitación actual.
             'room_type_id' => [
-                'sometimes',
+                'required',
                 'exists:room_types,id',
-                Rule::unique('hotel_rooms')->ignore($this->route('hotelRoomId'))
-                    ->where(function ($query) {
-                        return $query->where('hotel_id', $this->route('hotelId'))
-                            ->where('accommodation_id', $this->input('accommodation_id'));
-                    }),
+                // Asegura una combinación única de tipo de habitación y acomodación por hotel.
+                Rule::unique('hotel_room_configurations')
+                    ->where('hotel_id', $this->route('hotelId'))
+                    ->where('accommodation_id', $this->input('accommodation_id')),
             ],
             'accommodation_id' => [
-                'sometimes',
+                'required',
                 'exists:accommodations,id',
             ],
             'quantity' => [
-                'sometimes',
+                'required',
                 'integer',
                 'min:1',
             ],

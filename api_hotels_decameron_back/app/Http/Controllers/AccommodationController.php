@@ -31,7 +31,7 @@ class AccommodationController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $accommodation = $this->accommodationService->findById($id);
+        $accommodation = $this->accommodationService->find($id);
 
         if (!$accommodation) {
             return response()->json(['message' => 'Accommodation not found'], 404);

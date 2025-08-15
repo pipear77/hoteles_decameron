@@ -14,13 +14,6 @@ interface AccommodationRepositoryInterface
      */
     public function all(): Collection;
 
-    /**
-     * Obtener las acomodaciones de un hotel.
-     *
-     * @param Hotel $hotel
-     * @return Collection<int, Accommodation>
-     */
-    public function getByHotel(Hotel $hotel): Collection;
 
     /**
      * Encontrar una acomodación por su ID.
