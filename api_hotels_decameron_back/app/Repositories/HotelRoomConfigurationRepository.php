@@ -45,7 +45,7 @@ class HotelRoomConfigurationRepository implements HotelRoomConfigurationReposito
      * @param int $hotelId
      * @return int
      */
-    public function countByHotelId(int $hotelId): int
+    public function getTotalRoomQuantityByHotelId(int $hotelId): int
     {
         return HotelRoomConfiguration::where('hotel_id', $hotelId)->sum('quantity');
     }

@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Models\Accommodation;
 use Illuminate\Database\Eloquent\Collection;
-use App\Models\Hotel;
 
 class AccommodationRepository implements AccommodationRepositoryInterface
 {

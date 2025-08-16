@@ -23,6 +23,15 @@ interface HotelRepositoryInterface
     public function find(int $id): ?Hotel;
 
     /**
+     * Encontrar un hotel por su nombre.
+     *
+     * @param string $name
+     * @return Collection<int, Hotel>
+    */
+    public function findByName(string $name): Collection;
+
+
+    /**
      * Crear un nuevo hotel.
      *
      * @param array $data

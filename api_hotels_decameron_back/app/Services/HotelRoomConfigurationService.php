@@ -117,7 +117,7 @@ class HotelRoomConfigurationService implements HotelRoomConfigurationServiceInte
     private function validateTotalRooms(Hotel $hotel, int $quantityToAdd, int $quantityToRemove = 0): void
     {
         // Se calcula la suma actual de habitaciones del hotel (excluyendo la que se va a eliminar).
-        $existingRooms = $this->repository->countByHotelId($hotel->id);
+        $existingRooms = $this->repository->getTotalRoomQuantityByHotelId($hotel->id);
         $totalRooms = $existingRooms - $quantityToRemove + $quantityToAdd;
 
         if ($totalRooms > $hotel->rooms_total) {

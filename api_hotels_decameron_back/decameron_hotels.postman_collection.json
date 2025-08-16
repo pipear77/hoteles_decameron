@@ -1,0 +1,821 @@
+{
+	"info": {
+		"_postman_id": "008e3e2a-f406-4be5-b4b8-404968aa3870",
+		"name": "decameron_hotels",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "3680908"
+	},
+	"item": [
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"juan.perez@example.com\",\r\n  \"password\": \"password\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8000/api/login"
+					},
+					"response": []
+				},
+				{
+					"name": "Register User",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\": \"Juan\",\r\n    \"last_name\": \"Perez\",\r\n    \"email\": \"juan.perez@example.com\",\r\n    \"role_id\": 1,\r\n    \"password\": \"password\",\r\n    \"password_confirmation\": \"password\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/register"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener usuarios",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"juan.perez@example.com\",\r\n  \"password\": \"password\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/users"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener un usuario",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"juan.perez@example.com\",\r\n  \"password\": \"password\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/users/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Modificar usuario",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"first_name\": \"Felipe\",\r\n    \"last_name\": \"Alvarez\",\r\n    \"email\": \"juan.alvarez@example.com\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/users/3"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar un usuario",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:8000/api/users/2"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Accommodations",
+			"item": [
+				{
+					"name": "crear acomodación",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/accommodations"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar acomodaciones",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/accommodations"
+					},
+					"response": []
+				},
+				{
+					"name": "Modificar acomodación",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"description\": \"Prueba\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/accommodations/7"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar acomodación",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/accommodations/6"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver acomodación por ID",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/accommodations/1"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Room Types",
+			"item": [
+				{
+					"name": "crear tipo de habitación",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Special Suite\",\r\n    \"description\": \"example special suite\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/room_types"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar tipos de habitación",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/room_types"
+					},
+					"response": []
+				},
+				{
+					"name": "Modificar tipo de habitación",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"description\": \"prueba\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/room_types/4"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar tipo de habitación",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/room_types/5"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver tipo de habitación por ID",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/room_types/1"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "hotels",
+			"item": [
+				{
+					"name": "crear hotel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Hotel Ejemplo Dos\",\r\n    \"address\": \"Calle 15 #10-30\",\r\n    \"city\": \"Medellín\",\r\n    \"nit\": \"900000002\",\r\n    \"rooms_total\": 50\r\n}"
+						},
+						"url": "http://localhost:8000/api/hotels"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar hoteles",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": "http://localhost:8000/api/hotels"
+					},
+					"response": []
+				},
+				{
+					"name": "Modificar hotel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Hotel Ejemplo Actualizado\",\r\n    \"rooms_total\": 60\r\n}"
+						},
+						"url": "http://localhost:8000/api/hotels/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar hotel",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/hotels/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver hotel por ID",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": "http://localhost:8000/api/hotels/1"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "hotels configurations",
+			"item": [
+				{
+					"name": "Crear una configuración de habitación",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"room_type_id\": 1,\r\n    \"accommodation_id\": 1,\r\n    \"quantity\": 5,\r\n    \"price\": 150000\r\n}"
+						},
+						"url": "http://localhost:8000/api/hotels/2/room-configurations"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener todas las configuraciones de un hotel",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": "http://localhost:8000/api/hotels/2/room-configurations"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar una configuración",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"price\": 180000,\r\n    \"quantity\": 6\r\n}"
+						},
+						"url": "http://localhost:8000/api/hotels/2/configurations/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar una configuración",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Single Room\",\r\n    \"description\": \"A cozy room with a single bed and an ensuite bathroom.\"\r\n}"
+						},
+						"url": "http://localhost:8000/api/hotels/2/configurations/1"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener una configuración específica",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "1|uqEZfCZW2J5NMSzjEblyS2Kdk0D9keOK4BzJz7AA1d5be4aa"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": "http://localhost:8000/api/hotels/2/configurations/1"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

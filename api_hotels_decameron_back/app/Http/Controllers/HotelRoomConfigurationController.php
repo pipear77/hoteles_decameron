@@ -4,109 +4,122 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreHotelRoomConfigurationRequest;
 use App\Http\Requests\UpdateHotelRoomConfigurationRequest;
+use App\Models\Hotel;
+use App\Models\HotelRoomConfiguration;
 use App\Services\HotelRoomConfigurationServiceInterface;
 use Illuminate\Http\JsonResponse;
 
+/**
+ * Clase controladora para gestionar las configuraciones de habitaciones de un hotel.
+ *
+ * Sigue el principio SOLID de Responsabilidad Única (SRP) delegando la lógica de negocio
+ * a la capa de servicio (Service). El controlador solo maneja las peticiones HTTP
+ * y las respuestas.
+ */
 class HotelRoomConfigurationController extends Controller
 {
-    public function __construct(
-        private HotelRoomConfigurationServiceInterface $hotelRoomConfigurationService
-    ) {}
+    /**
+     * @var HotelRoomConfigurationServiceInterface
+     */
+    protected HotelRoomConfigurationServiceInterface $hotelRoomConfigurationService;
 
     /**
-     * Muestra una lista de todas las configuraciones de habitaciones para un hotel específico.
+     * Constructor del controlador.
      *
-     * @param int $hotelId
-     * @return JsonResponse
+     * @param HotelRoomConfigurationServiceInterface $hotelRoomConfigurationService
      */
-    public function index(int $hotelId): JsonResponse
+    public function __construct(HotelRoomConfigurationServiceInterface $hotelRoomConfigurationService)
     {
-        $hotelRooms = $this->hotelRoomConfigurationService->getByHotelId($hotelId);
-        return response()->json($hotelRooms);
+        $this->hotelRoomConfigurationService = $hotelRoomConfigurationService;
     }
 
     /**
-     * Muestra una configuración de habitación específica por su ID.
+     * Muestra una lista de configuraciones de habitaciones para un hotel específico.
      *
-     * @param int $hotelId
-     * @param int $hotelRoomConfigurationId
+     * @param Hotel $hotel
      * @return JsonResponse
      */
-    public function show(int $hotelId, int $hotelRoomConfigurationId): JsonResponse
+    public function index(Hotel $hotel): JsonResponse
     {
-        $hotelRoom = $this->hotelRoomConfigurationService->find($hotelRoomConfigurationId);
+        $configurations = $this->hotelRoomConfigurationService->getByHotelId($hotel->id);
 
-        // Se agrega un filtro para asegurar que la configuración pertenezca al hotel correcto
-        if (!$hotelRoom || $hotelRoom->hotel_id !== $hotelId) {
-            return response()->json(['message' => 'Hotel room configuration not found or does not belong to this hotel.'], 404);
-        }
-
-        return response()->json($hotelRoom);
+        return response()->json($configurations);
     }
 
     /**
-     * Almacena una nueva configuración de habitación.
+     * Almacena una nueva configuración de habitación para un hotel.
      *
      * @param StoreHotelRoomConfigurationRequest $request
-     * @param int $hotelId
+     * @param Hotel $hotel
      * @return JsonResponse
      */
-    public function store(StoreHotelRoomConfigurationRequest $request, int $hotelId): JsonResponse
+    public function store(StoreHotelRoomConfigurationRequest $request, Hotel $hotel): JsonResponse
     {
-        $validatedData = $request->validated();
-        $hotelRoomConfiguration = $this->hotelRoomConfigurationService->create($hotelId, $validatedData);
-        return response()->json($hotelRoomConfiguration, 201);
+        // La validación y autorización se manejan automáticamente por el Form Request.
+        $newConfiguration = $this->hotelRoomConfigurationService->create(
+            $hotel->id,
+            $request->validated()
+        );
+
+        return response()->json($newConfiguration, 201);
     }
 
     /**
-     * Actualiza una configuración de habitación específica.
+     * Muestra una configuración de habitación específica para un hotel.
      *
-     * @param UpdateHotelRoomConfigurationRequest $request
-     * @param int $hotelId
-     * @param int $hotelRoomConfigurationId
+     * @param Hotel $hotel
+     * @param HotelRoomConfiguration $hotelRoomConfiguration
      * @return JsonResponse
      */
-    public function update(UpdateHotelRoomConfigurationRequest $request, int $hotelId, int $hotelRoomConfigurationId): JsonResponse
+    public function show(Hotel $hotel, HotelRoomConfiguration $hotelRoomConfiguration): JsonResponse
     {
-        $validatedData = $request->validated();
-        $hotelRoomConfiguration = $this->hotelRoomConfigurationService->update($hotelRoomConfigurationId, $validatedData);
-
-        if (!$hotelRoomConfiguration) {
-            return response()->json(['message' => 'Hotel room configuration not found.'], 404);
-        }
-
-        // Se agrega un filtro para asegurar que la configuración pertenezca al hotel correcto
-        if ($hotelRoomConfiguration->hotel_id !== $hotelId) {
-            return response()->json(['message' => 'Hotel room configuration does not belong to this hotel.'], 403);
-        }
-
+        // La validación de pertenencia se maneja automáticamente por la ligadura de modelos
+        // y la política de autorización, por lo que no es necesario el chequeo manual.
         return response()->json($hotelRoomConfiguration);
     }
 
     /**
-     * Elimina una configuración de habitación específica.
+     * Actualiza una configuración de habitación existente.
      *
-     * @param int $hotelId
-     * @param int $hotelRoomConfigurationId
+     * @param UpdateHotelRoomConfigurationRequest $request
+     * @param Hotel $hotel
+     * @param HotelRoomConfiguration $hotelRoomConfiguration
      * @return JsonResponse
      */
-    public function destroy(int $hotelId, int $hotelRoomConfigurationId): JsonResponse
+    public function update(UpdateHotelRoomConfigurationRequest $request, Hotel $hotel, HotelRoomConfiguration $hotelRoomConfiguration): JsonResponse
     {
-        $hotelRoomConfiguration = $this->hotelRoomConfigurationService->find($hotelRoomConfigurationId);
-
-        if (!$hotelRoomConfiguration) {
-            return response()->json(['message' => 'Hotel room configuration not found.'], 404);
+        // Se valida que la configuración pertenezca al hotel del que se hace la petición
+        // para prevenir manipulaciones maliciosas de la URL.
+        if ($hotelRoomConfiguration->hotel_id !== $hotel->id) {
+            abort(404, 'Hotel room configuration not found or does not belong to this hotel.');
         }
 
-        if ($hotelRoomConfiguration->hotel_id !== $hotelId) {
-            return response()->json(['message' => 'Hotel room configuration does not belong to this hotel.'], 403);
+        $updatedConfiguration = $this->hotelRoomConfigurationService->update(
+            $hotelRoomConfiguration->id,
+            $request->validated()
+        );
+
+        return response()->json($updatedConfiguration);
+    }
+
+    /**
+     * Elimina una configuración de habitación.
+     *
+     * @param Hotel $hotel
+     * @param HotelRoomConfiguration $hotelRoomConfiguration
+     * @return JsonResponse
+     */
+    public function destroy(Hotel $hotel, HotelRoomConfiguration $hotelRoomConfiguration): JsonResponse
+    {
+        // Se valida que la configuración pertenezca al hotel del que se hace la petición
+        if ($hotelRoomConfiguration->hotel_id !== $hotel->id) {
+            abort(404, 'Hotel room configuration not found or does not belong to this hotel.');
         }
 
-        $deleted = $this->hotelRoomConfigurationService->delete($hotelRoomConfigurationId);
+        $success = $this->hotelRoomConfigurationService->delete($hotelRoomConfiguration->id);
 
-        if (!$deleted) {
-            // Un 500 es más apropiado si el recurso existe pero no se pudo eliminar.
-            return response()->json(['message' => 'Hotel room configuration could not be deleted.'], 500);
+        if (!$success) {
+            abort(500, 'Hotel room configuration could not be deleted.');
         }
 
         return response()->json(null, 204);

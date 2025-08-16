@@ -19,7 +19,7 @@ class HotelService implements HotelServiceInterface
     public function getAll(?string $name = null): Collection
     {
         if ($name) {
-            return Hotel::where('name', 'like', "%{$name}%")->get();
+            return $this->repository->findByName($name);
         }
         return $this->repository->all();
     }

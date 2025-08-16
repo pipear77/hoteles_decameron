@@ -149,7 +149,7 @@ class UserService implements UserServiceInterface
 
         // Verifica si el rol a asignar es 'admin' y si el usuario actual tiene permisos.
         $newRole = Role::find($newRoleId);
-        if ($newRole && $newRole->name === 'admin' && Auth::user()->role->name !== 'admin') {
+        if ($newRole && $newRole->name === 'admin' && Auth::user()->role()->name !== 'admin') {
             throw new AccessDeniedHttpException('No tienes permiso para asignar el rol de administrador.');
         }
 

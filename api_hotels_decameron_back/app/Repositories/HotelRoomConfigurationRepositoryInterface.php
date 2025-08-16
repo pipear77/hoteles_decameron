@@ -36,7 +36,7 @@ interface HotelRoomConfigurationRepositoryInterface
      * @param int $hotelId
      * @return int
      */
-    public function countByHotelId(int $hotelId): int;
+    public function getTotalRoomQuantityByHotelId(int $hotelId): int;
 
     /**
      * Crear una nueva habitación de hotel.

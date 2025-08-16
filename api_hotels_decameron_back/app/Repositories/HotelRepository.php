@@ -29,6 +29,18 @@ class HotelRepository implements HotelRepositoryInterface
     }
 
     /**
+     * Encontrar un hotel por su nombre.
+     *
+     * @param string $name
+     * @return Collection<int, Hotel>
+     */
+    public function findByName(string $name): Collection
+    {
+        // Centraliza la lógica de búsqueda aquí.
+        return Hotel::where('name', 'like', "%{$name}%")->get();
+    }
+
+    /**
      * Crear un nuevo hotel.
      *
      * @param array $data
