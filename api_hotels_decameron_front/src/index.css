@@ -1,3 +1,18 @@
+/* src/index.css */
+
+/*
+  Importa las directivas base, de componentes y de utilidades de Tailwind.
+  Es crucial que estas tres l\u00edneas est\u00e9n al principio del archivo
+  para que las utilidades de Tailwind puedan sobreescribir los estilos base.
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Tu c\u00f3digo original de Vite. Los estilos aqu\u00ed pueden ser sobreescritos
+  por las clases de Tailwind que uses en tus componentes.
+*/
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
