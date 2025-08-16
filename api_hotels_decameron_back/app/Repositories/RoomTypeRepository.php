@@ -27,47 +27,4 @@ class RoomTypeRepository implements RoomTypeRepositoryInterface
     {
         return RoomType::find($id);
     }
-
-    /**
-     * Crear una nueva acomodación.
-     *
-     * @param array $data
-     * @return RoomType
-     */
-    public function create(array $data): RoomType
-    {
-        // TODO: Implement create() method.
-        return RoomType::create($data);
-    }
-
-    /**
-     * Actualizar un tipo de habitación.
-     *
-     * @param int $id
-     * @param array $data
-     * @return RoomType|null
-     */
-    public function update(int $id, array $data): ?RoomType
-    {
-        // TODO: Implement update() method.
-        $roomType = $this->find($id);
-        if($roomType)
-        {
-            $roomType->update($data);
-        }
-        return $roomType;
-    }
-
-    /**
-     * Metodo para eliminar un tipo de habitación
-     *
-     * @param int $id
-     * @return bool
-     */
-    public function delete(int $id): bool
-    {
-        // TODO: Implement delete() method.
-        return RoomType::destroy($id) > 0;
-
-    }
 }

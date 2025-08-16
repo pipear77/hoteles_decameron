@@ -1,84 +1,80 @@
 <?php
+// src/app/Http/Controllers/AuthController.php
 
 namespace App\Http\Controllers;
 
-use App\Services\UserServiceInterface;
-use Illuminate\Http\Request;
-
 use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RegisterRequest;
+use App\Services\UserServiceInterface;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
+/**
+ * Clase controladora para gestionar la autenticación de la API.
+ * Sigue el principio SOLID, delegando la lógica de negocio al servicio.
+ */
 class AuthController extends Controller
 {
-    private UserServiceInterface $userService;
+    /**
+     * El servicio de usuarios.
+     *
+     * @var UserServiceInterface
+     */
+    protected UserServiceInterface $userService;
 
+    /**
+     * Constructor del controlador.
+     *
+     * @param UserServiceInterface $userService
+     */
     public function __construct(UserServiceInterface $userService)
     {
         $this->userService = $userService;
     }
 
     /**
-     * Registra un nuevo usuario delegando la lógica al servicio.
+     * Maneja el login de un usuario de la API.
      *
-     * @param RegisterRequest $request
+     * @param LoginRequest $request
      * @return JsonResponse
-     */
-    public function register(RegisterRequest $request): JsonResponse
-    {
-        try {
-            // Usar $request->validated() es crucial. Esto nos da un array
-            // con solo los datos que pasaron la validación, garantizando
-            // que 'role_id' estará presente y no será nulo.
-            $userData = $request->validated();
-
-            $user = $this->userService->registerUser($userData);
-
-            return response()->json([
-                'status' => true,
-                'message' => '¡Usuario creado exitosamente!',
-                'user' => $user,
-            ], 201);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Hubo un error al crear el usuario.',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Maneja el login de un usuario existente.
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        // 1. Obtiene las credenciales validadas del FormRequest.
-        $credentials = $request->validated();
+        try {
+            // Se delega la autenticación al servicio.
+            $result = $this->userService->authenticateUser($request->validated());
 
-        // 2. Delega toda la lógica de autenticación al servicio.
-        $result = $this->userService->authenticateUser($credentials);
-
-        // 3. Maneja el resultado devuelto por el servicio.
-        if ($result['status'] === true) {
-            return response()->json($result);
+            return response()->json($result, Response::HTTP_OK);
+        } catch (\Exception $e) {
+            // En caso de fallo, se retorna un error 401 para credenciales inválidas.
+            return response()->json([
+                'status'  => false,
+                'message' => 'Credenciales inválidas.',
+                'error'   => $e->getMessage(),
+            ], Response::HTTP_UNAUTHORIZED);
         }
-
-        // Si la autenticación falla, devolvemos un error 401.
-        return response()->json($result, 401);
     }
 
     /**
-     * Cierra la sesión del usuario eliminando su token.
+     * Cierra la sesión del usuario.
+     *
+     * @param Request $request
+     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
-        // La lógica de logout es correcta. La mantenemos.
-        $request->user()->currentAccessToken()->delete();
+        try {
+            // Se delega la lógica de cierre de sesión al servicio.
+            $this->userService->logoutUser();
 
-        return response()->json(['message' => 'Logout exitoso'], 200);
+            return response()->json(['message' => 'Logout exitoso'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            // En caso de fallo, se retorna un error 500.
+            return response()->json([
+                'status' => false,
+                'message' => 'Hubo un error al cerrar la sesión.',
+                'error' => $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

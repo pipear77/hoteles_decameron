@@ -1,19 +1,20 @@
 <?php
+// src/tests/Feature/AuthControllerTest.php
 
 namespace Tests\Feature;
 
-use App\Models\Role;
 use App\Models\User;
 use App\Services\UserServiceInterface;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Tests\TestCase;
 
 /**
  * Clase de pruebas unitarias para AuthController.
+ *
  * Esta clase se enfoca en probar el comportamiento del controlador de autenticación,
  * aislando su lógica de la capa de servicio y la base de datos mediante mocks.
  */
@@ -22,115 +23,56 @@ class AuthControllerTest extends TestCase
     use RefreshDatabase, WithFaker;
 
     /**
-     * @var \Mockery\MockInterface
+     * @var \Mockery\MockInterface|UserServiceInterface
      */
     protected $userServiceMock;
 
+    /**
+     * Configuración inicial para cada prueba.
+     * Creamos un mock del servicio y lo registramos en el contenedor de servicios
+     * para asegurar que las pruebas no interactúen con la base de datos real.
+     */
     protected function setUp(): void
     {
         parent::setUp();
-
-        // Creamos un mock del servicio y lo registramos en el contenedor de servicios
-        // para asegurar que las pruebas no interactúen con la base de datos real.
         $this->userServiceMock = Mockery::mock(UserServiceInterface::class);
         $this->app->instance(UserServiceInterface::class, $this->userServiceMock);
     }
 
+    /**
+     * Limpia los mocks después de cada prueba.
+     */
     protected function tearDown(): void
     {
-        // Cierra los mocks después de cada prueba para evitar fugas de memoria.
         Mockery::close();
         parent::tearDown();
     }
 
-    /** @test */
-    public function it_can_register_a_new_user_successfully(): void
+    // --- Métodos de ayuda para DRY y mantener la claridad ---
+
+    /**
+     * Define los datos de login comunes para las pruebas.
+     *
+     * @return array
+     */
+    private function getLoginCredentials(): array
     {
-        // Creamos un rol real en la base de datos de prueba para que la validación
-        // de `role_id` no falle.
-        $role = Role::factory()->create();
-
-        // Datos de prueba para simular la petición de registro.
-        $userData = [
-            'first_name'            => 'John',
-            'last_name'             => 'Doe',
-            'email'                 => 'john@example.com',
-            'password'              => 'password',
-            'password_confirmation' => 'password',
-            'role_id'               => $role->id, // Usamos el ID del rol creado.
-        ];
-
-        // Configuramos el mock para que cuando se llame a registerUser(),
-        // retorne un objeto User simulado. Esto evita la interacción real con la DB.
-        $this->userServiceMock
-            ->shouldReceive('registerUser')
-            ->once()
-            ->andReturn(
-                new User([
-                    'id'         => 1,
-                    'first_name' => $userData['first_name'],
-                    'last_name'  => $userData['last_name'],
-                    'email'      => $userData['email'],
-                    'role_id'    => $userData['role_id'],
-                ])
-            );
-
-        // Realizamos la petición HTTP POST al endpoint de registro.
-        $response = $this->postJson('/api/register', $userData);
-
-        // Verificamos el código de estado y la estructura de la respuesta JSON.
-        $response->assertStatus(201)
-            ->assertJson([
-                'status'  => true,
-                'message' => '¡Usuario creado exitosamente!',
-                'user'    => [
-                    'email'      => 'john@example.com',
-                    'first_name' => 'John',
-                    'last_name'  => 'Doe',
-                ],
-            ]);
-    }
-
-    /** @test */
-    public function it_returns_a_500_error_when_registration_fails(): void
-    {
-        // Creamos un rol real para evitar que la validación de `role_id` falle.
-        $role = Role::factory()->create();
-
-        $userData = [
-            'first_name'            => $this->faker->firstName,
-            'last_name'             => $this->faker->lastName,
-            'email'                 => $this->faker->unique()->safeEmail,
-            'password'              => 'password123',
-            'password_confirmation' => 'password123',
-            'role_id'               => $role->id,
-        ];
-
-        // Configuramos el mock para que lance una excepción.
-        // Esto simula un fallo en la capa de servicio.
-        $this->userServiceMock
-            ->shouldReceive('registerUser')
-            ->once()
-            ->andThrow(new \Exception('Database error'));
-
-        $response = $this->postJson('/api/register', $userData);
-
-        $response->assertStatus(500)
-            ->assertJson([
-                'status'  => false,
-                'message' => 'Hubo un error al crear el usuario.',
-                'error'   => 'Database error',
-            ]);
-    }
-
-    /** @test */
-    public function it_can_authenticate_a_user_successfully(): void
-    {
-        $credentials = [
+        return [
             'email'    => $this->faker->unique()->safeEmail,
             'password' => 'password123',
         ];
+    }
 
+    // --- Pruebas de autenticación ---
+
+    /**
+     * @test
+     * Prueba que un usuario se puede autenticar exitosamente.
+     */
+    public function it_can_authenticate_a_user_successfully(): void
+    {
+        // ARRANGE
+        $credentials = $this->getLoginCredentials();
         $result = [
             'status'  => true,
             'message' => '¡Autenticación exitosa!',
@@ -148,51 +90,69 @@ class AuthControllerTest extends TestCase
             ->with($credentials)
             ->andReturn($result);
 
+        // ACT
         $response = $this->postJson('/api/login', $credentials);
 
-        $response->assertStatus(200)
-            ->assertJson($result);
+        // ASSERT
+        $response->assertStatus(200)->assertJson($result);
     }
 
-    /** @test */
+    /**
+     * @test
+     * Prueba que se retorna un error 401 para credenciales de login inválidas.
+     */
     public function it_returns_401_for_invalid_login_credentials(): void
     {
-        $credentials = [
-            'email'    => $this->faker->unique()->safeEmail,
-            'password' => 'wrong-password',
-        ];
-
+        // ARRANGE
+        $credentials = $this->getLoginCredentials();
         $result = [
             'status'  => false,
             'message' => 'Credenciales inválidas.',
         ];
 
         // Configuramos el mock para que devuelva una respuesta fallida.
+        // Simulamos que el servicio lanza una excepción para las credenciales inválidas.
         $this->userServiceMock
             ->shouldReceive('authenticateUser')
             ->once()
             ->with($credentials)
-            ->andReturn($result);
+            ->andThrow(\Exception::class, 'Credenciales incorrectas');
 
+        // ACT
         $response = $this->postJson('/api/login', $credentials);
 
-        $response->assertStatus(401)
-            ->assertJson($result);
+        // ASSERT
+        $response->assertStatus(401)->assertJson($result);
     }
 
-    /** @test */
+    // --- Pruebas de cierre de sesión ---
+
+    /**
+     * @test
+     * Prueba que un usuario autenticado puede cerrar sesión exitosamente.
+     */
     public function it_can_logout_a_user_successfully(): void
     {
-        // Creamos un usuario mock que simulamos que está autenticado.
-        // No creamos un usuario real en la base de datos.
-        $user = Mockery::mock(User::class);
-        $user->shouldReceive('currentAccessToken->delete')->once();
+        // ARRANGE: Se crea un mock que implementa la interfaz Authenticatable.
+        $mockUser = Mockery::mock(Authenticatable::class);
 
-        // Usamos actingAs para simular que el usuario está autenticado.
-        $this->actingAs($user, 'sanctum');
+        // Se configura el mock del usuario para que los métodos necesarios sean llamados por actingAs.
+        $mockUser->shouldReceive('getAuthIdentifierName')->andReturn('id');
+        $mockUser->shouldReceive('getAuthIdentifier')->andReturn(1);
 
+        // Se delega la autenticación a Laravel para no tener conflictos con Mockery.
+        $this->actingAs($mockUser, 'sanctum');
+
+        // Se configura el mock del servicio para que el método 'logoutUser' sea llamado.
+        $this->userServiceMock
+            ->shouldReceive('logoutUser')
+            ->once()
+            ->andReturn(true);
+
+        // ACT
         $response = $this->postJson('/api/logout');
 
+        // ASSERT
         $response->assertStatus(200)
             ->assertJson(['message' => 'Logout exitoso']);
     }

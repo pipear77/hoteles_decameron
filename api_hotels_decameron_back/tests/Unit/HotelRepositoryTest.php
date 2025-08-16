@@ -1,157 +1,162 @@
 <?php
+// src/tests/Unit/HotelRepositoryTest.php
 
 namespace Tests\Unit;
 
+use Mockery;
 use Tests\TestCase;
 use App\Models\Hotel;
 use App\Repositories\HotelRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Pruebas unitarias para la clase HotelRepository.
- * Estas pruebas se enfocan en la lógica de persistencia y la interacción
- * con el modelo Eloquent, asegurando que las operaciones CRUD se realicen
- * correctamente en la base de datos.
+ * Estas pruebas verifican la interacción del repositorio con el modelo Eloquent,
+ * asegurando que delega correctamente las responsabilidades de persistencia.
+ * Se utiliza Mockery para aislar el repositorio de la base de datos.
  */
 class HotelRepositoryTest extends TestCase
 {
-    use RefreshDatabase;
-
+    private $hotelMock;
     private HotelRepository $repository;
 
     /**
-     * Se inicializa el repositorio antes de cada prueba.
+     * Configuración inicial para cada prueba.
      */
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repository = new HotelRepository();
+        // Se crea un mock del modelo Hotel.
+        $this->hotelMock = Mockery::mock(Hotel::class);
+        // Se inyecta el mock en el constructor del repositorio.
+        $this->repository = new HotelRepository($this->hotelMock);
     }
 
     /**
-     * Prueba que el método 'all' devuelve todos los hoteles.
+     * Limpia los mocks después de cada prueba.
      */
-    public function test_all_returns_all_hotels(): void
+    protected function tearDown(): void
     {
-        // ARRANGE: Crea 3 hoteles en la base de datos.
-        Hotel::factory()->count(3)->create();
-
-        // ACT: Llama al método all() del repositorio.
-        $hotels = $this->repository->all();
-
-        // ASSERT: Verifica que la colección devuelta tenga 3 elementos.
-        $this->assertCount(3, $hotels);
+        Mockery::close();
+        parent::tearDown();
     }
 
-    /**
-     * Prueba que el método 'find' devuelve un hotel existente.
-     */
-    public function test_find_returns_a_hotel_by_id(): void
+    /** @test */
+    public function it_can_get_a_list_of_all_hotels(): void
     {
-        // ARRANGE: Crea un hotel específico en la base de datos.
-        $hotel = Hotel::factory()->create();
+        // ARRANGE: Se simula una colección de hoteles.
+        $hotels = new Collection([new Hotel(), new Hotel(), new Hotel()]);
+        // Se espera que el método 'all' se llame una vez y devuelva la colección.
+        $this->hotelMock->shouldReceive('all')->once()->andReturn($hotels);
 
-        // ACT: Llama al método find() con el ID del hotel.
-        $foundHotel = $this->repository->find($hotel->id);
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->all();
 
-        // ASSERT: Verifica que el hotel encontrado no es nulo y que sus atributos coinciden.
-        $this->assertNotNull($foundHotel);
-        $this->assertEquals($hotel->id, $foundHotel->id);
+        // ASSERT: Verifica que el resultado sea la colección esperada.
+        $this->assertCount(3, $result);
+        $this->assertInstanceOf(Collection::class, $result);
     }
 
-    /**
-     * Prueba que el método 'find' devuelve null si el hotel no existe.
-     */
-    public function test_find_returns_null_for_non_existent_hotel(): void
+    /** @test */
+    public function it_can_find_a_hotel_by_id(): void
     {
-        // ARRANGE: No hay hoteles en la base de datos.
-        // ACT: Llama al método find() con un ID que no existe.
-        $foundHotel = $this->repository->find(999);
+        // ARRANGE: Se simula la búsqueda de un hotel por ID.
+        $hotel = new Hotel(['id' => 1]);
+        $this->hotelMock->shouldReceive('find')->once()->with(1)->andReturn($hotel);
+
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->find(1);
+
+        // ASSERT: Verifica que el resultado sea el objeto esperado.
+        $this->assertEquals($hotel, $result);
+    }
+
+    /** @test */
+    public function it_returns_null_if_hotel_is_not_found(): void
+    {
+        // ARRANGE: Se simula la búsqueda fallida.
+        $this->hotelMock->shouldReceive('find')->once()->with(999)->andReturn(null);
+
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->find(999);
 
         // ASSERT: Verifica que el resultado es nulo.
-        $this->assertNull($foundHotel);
+        $this->assertNull($result);
     }
 
-    /**
-     * Prueba que el método 'create' crea y almacena un nuevo hotel.
-     */
-    public function test_create_stores_a_new_hotel(): void
+    /** @test */
+    public function it_can_create_a_new_hotel(): void
     {
-        // Se utiliza el método `raw` del factory para obtener un array de datos
-        // válidos, incluyendo el campo `rooms_total`. Esto asegura que los datos
-        // de prueba sean consistentes y no violen las restricciones de la base de datos.
-        $data = Hotel::factory()->raw();
+        // ARRANGE: Se preparan los datos para la creación.
+        $data = ['name' => 'Hotel Creado'];
+        $createdHotel = new Hotel($data);
+        // Se espera que el método 'create' del mock del modelo se llame con los datos correctos.
+        $this->hotelMock->shouldReceive('create')->once()->with($data)->andReturn($createdHotel);
 
-        $newHotel = $this->repository->create($data);
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->create($data);
 
-        $this->assertInstanceOf(Hotel::class, $newHotel);
-        $this->assertDatabaseHas('hotels', ['id' => $newHotel->id]);
+        // ASSERT: Verifica que el objeto devuelto es el esperado.
+        $this->assertEquals($createdHotel, $result);
     }
 
-    /**
-     * Prueba que el método 'update' modifica un hotel existente.
-     */
-    public function test_update_modifies_an_existing_hotel(): void
+    /** @test */
+    public function it_can_update_an_existing_hotel(): void
     {
-        // ARRANGE: Crea un hotel y prepara los datos para la actualización.
-        $hotel = Hotel::factory()->create();
-        $updatedData = [
-            'name' => 'Hotel Renombrado',
-            'city' => 'Bogota',
-        ];
+        // ARRANGE: Se simula la actualización de un hotel.
+        $hotel = Mockery::mock(Hotel::class);
+        $updatedData = ['name' => 'Hotel Actualizado'];
+        $hotel->shouldReceive('update')->once()->with($updatedData)->andReturn(true);
 
-        // ACT: Llama al método update() del repositorio.
-        $updatedHotel = $this->repository->update($hotel->id, $updatedData);
+        // Se simula la búsqueda del hotel por ID, y se devuelve el mock del hotel.
+        $this->hotelMock->shouldReceive('find')->once()->with(1)->andReturn($hotel);
 
-        // ASSERT:
-        // 1. Verifica que el objeto devuelto no es nulo.
-        $this->assertNotNull($updatedHotel);
-        // 2. Verifica que los datos se han actualizado en la base de datos.
-        $this->assertDatabaseHas('hotels', $updatedData);
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->update(1, $updatedData);
+
+        // ASSERT: Verifica que el resultado sea el objeto hotel actualizado.
+        $this->assertEquals($hotel, $result);
     }
 
-    /**
-     * Prueba que el método 'update' devuelve null si el hotel no existe.
-     */
-    public function test_update_returns_null_for_non_existent_hotel(): void
+    /** @test */
+    public function it_returns_null_on_update_of_non_existent_hotel(): void
     {
-        // ARRANGE: Prepara datos de actualización, pero no hay hotel en la DB.
-        $data = ['name' => 'Hotel Fantasma'];
+        // ARRANGE: Se simula la búsqueda de un hotel que no existe.
+        $this->hotelMock->shouldReceive('find')->once()->with(999)->andReturn(null);
+        $updatedData = ['name' => 'Hotel Fantasma'];
 
-        // ACT: Llama a update() con un ID que no existe.
-        $updatedHotel = $this->repository->update(999, $data);
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->update(999, $updatedData);
 
-        // ASSERT: Verifica que el resultado es nulo.
-        $this->assertNull($updatedHotel);
+        // ASSERT: Verifica que el resultado sea nulo.
+        $this->assertNull($result);
     }
 
-    /**
-     * Prueba que el método 'delete' elimina un hotel de la base de datos.
-     */
-    public function test_delete_removes_a_hotel_from_the_database(): void
+    /** @test */
+    public function it_can_delete_an_existing_hotel(): void
     {
-        // ARRANGE: Crea un hotel para eliminar.
-        $hotel = Hotel::factory()->create();
+        // ARRANGE: Se simula la búsqueda y eliminación de un hotel.
+        $hotel = Mockery::mock(Hotel::class);
+        $hotel->shouldReceive('delete')->once()->andReturn(true);
+        $this->hotelMock->shouldReceive('find')->once()->with(1)->andReturn($hotel);
 
-        // ACT: Llama al método delete() del repositorio.
-        $deleted = $this->repository->delete($hotel->id);
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->delete(1);
 
-        // ASSERT:
-        // 1. Verifica que el método devuelve true.
-        $this->assertTrue($deleted);
-        // 2. Verifica que el hotel ya no existe en la base de datos.
-        $this->assertDatabaseMissing('hotels', ['id' => $hotel->id]);
+        // ASSERT: Verifica que el resultado sea true.
+        $this->assertTrue($result);
     }
 
-    /**
-     * Prueba que el método 'delete' devuelve false si el hotel no existe.
-     */
-    public function test_delete_returns_false_for_non_existent_hotel(): void
+    /** @test */
+    public function it_returns_false_on_delete_of_non_existent_hotel(): void
     {
-        // ACT: Intenta eliminar un hotel con un ID que no existe.
-        $deleted = $this->repository->delete(999);
+        // ARRANGE: Se simula la búsqueda de un hotel que no existe.
+        $this->hotelMock->shouldReceive('find')->once()->with(999)->andReturn(null);
 
-        // ASSERT: Verifica que el método devuelve false.
-        $this->assertFalse($deleted);
+        // ACT: Llama al método del repositorio.
+        $result = $this->repository->delete(999);
+
+        // ASSERT: Verifica que el resultado sea false.
+        $this->assertFalse($result);
     }
 }

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('hotel_room_configurations', function (Blueprint $table) {
             $table->id();
 
-            // Claves foráneas para las tablas que representan las entidades que se relacionan
             $table->foreignId('hotel_id')
                 ->constrained('hotels')
                 ->onUpdate('cascade')
@@ -30,16 +29,11 @@ return new class extends Migration
                 ->onUpdate('cascade')
                 ->onDelete('restrict');
 
-            // Campo para la cantidad de habitaciones de este tipo y acomodación
             $table->unsignedSmallInteger('quantity');
             $table->timestamps();
 
-            // Restricción única para garantizar que no haya configuraciones duplicadas
-            // para el mismo hotel, tipo de habitación y acomodación.
-            $table->unique(['hotel_id', 'room_type_id', 'accommodation_id'], 'uniq_hotel_room_combo');
-
-            // Índice para optimizar las consultas que buscan por tipo de habitación y acomodación.
-            $table->index(['room_type_id', 'accommodation_id'], 'idx_type_accommodation');
+            // Restricción única con un nombre más claro
+            $table->unique(['hotel_id', 'room_type_id', 'accommodation_id'], 'hotel_room_config_unique');
         });
     }
 

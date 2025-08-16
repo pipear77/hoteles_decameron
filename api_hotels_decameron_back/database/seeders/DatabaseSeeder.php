@@ -12,10 +12,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RoleSeeder::class, // Se debe ejecutar primero para crear los roles antes que los users
-            UserSeeder::class,
             AccommodationSeeder::class,
             RoomTypeSeeder::class,
+            ManagerUserSeeder::class,
+            CitySeeder::class,
         ]);
     }
 }

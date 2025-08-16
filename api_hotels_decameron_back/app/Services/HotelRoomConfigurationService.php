@@ -4,126 +4,107 @@ namespace App\Services;
 
 use App\Models\Hotel;
 use App\Models\HotelRoomConfiguration;
-use App\Repositories\HotelRoomConfigurationRepositoryInterface;
 use App\Repositories\HotelRepositoryInterface;
-use Illuminate\Database\Eloquent\Collection;
+use App\Repositories\HotelRoomConfigurationRepositoryInterface;
 use Illuminate\Validation\ValidationException;
+
 class HotelRoomConfigurationService implements HotelRoomConfigurationServiceInterface
 {
+    /**
+     * @param HotelRoomConfigurationRepositoryInterface $roomConfigurationRepository
+     * @param HotelRepositoryInterface $hotelRepository
+     */
     public function __construct(
-        private HotelRoomConfigurationRepositoryInterface $repository,
+        private HotelRoomConfigurationRepositoryInterface $roomConfigurationRepository,
         private HotelRepositoryInterface $hotelRepository
     ) {}
 
     /**
-     * Obtener todas las configuraciones de habitaciones.
-     *
-     * @return Collection<int, HotelRoomConfiguration>
-     */
-    public function getAll(): Collection
-    {
-        return $this->repository->all();
-    }
-
-    /**
-     * Obtener las configuraciones de un hotel específico.
+     * Crea una nueva configuración de habitación para un hotel.
      *
      * @param int $hotelId
-     * @return Collection<int, HotelRoomConfiguration>
-     */
-    public function getByHotelId(int $hotelId): Collection
-    {
-        return $this->repository->getByHotelId($hotelId);
-    }
-
-    /**
-     * Encontrar una configuración de habitación por su ID.
-     *
-     * @param int $id
-     * @return HotelRoomConfiguration|null
-     */
-    public function find(int $id): ?HotelRoomConfiguration
-    {
-        return $this->repository->find($id);
-    }
-
-    /**
-     * Crear una nueva configuración para un hotel.
-     *
-     * @param int $hotelId
-     * @param array<string, mixed> $data
+     * @param array $data
      * @return HotelRoomConfiguration
      * @throws ValidationException
      */
     public function create(int $hotelId, array $data): HotelRoomConfiguration
     {
         $hotel = $this->hotelRepository->find($hotelId);
+
         if (!$hotel) {
-            throw ValidationException::withMessages(['hotel_id' => 'El hotel especificado no existe.']);
+            throw ValidationException::withMessages([
+                'hotel_id' => 'The specified hotel does not exist.',
+            ]);
         }
-        $data['hotel_id'] = $hotelId;
 
-        $this->validateTotalRooms($hotel, $data['quantity']);
+        $existingRooms = $this->roomConfigurationRepository->getTotalRoomQuantityByHotelId($hotelId);
+        $this->validateRoomsTotal($hotel, $existingRooms + $data['quantity'], 'create');
 
-        return $this->repository->create($data);
+        return $this->roomConfigurationRepository->create($data + ['hotel_id' => $hotelId]);
     }
 
     /**
-     * Actualizar una configuración de habitación existente.
+     * Actualiza una configuración de habitación existente.
      *
      * @param int $id
-     * @param array<string, mixed> $data
+     * @param array $data
      * @return HotelRoomConfiguration|null
      * @throws ValidationException
      */
     public function update(int $id, array $data): ?HotelRoomConfiguration
     {
-        $hotelConfiguration = $this->repository->find($id);
-        if (!$hotelConfiguration) {
+        $configuration = $this->roomConfigurationRepository->find($id);
+
+        if (!$configuration) {
             return null;
         }
 
-        $hotel = $this->hotelRepository->find($hotelConfiguration->hotel_id);
+        $hotel = $this->hotelRepository->find($configuration->hotel_id);
 
-        $quantityToAdd = $data['quantity'] ?? $hotelConfiguration->quantity;
-        $quantityToRemove = $hotelConfiguration->quantity;
+        if (!$hotel) {
+            throw ValidationException::withMessages([
+                'hotel_id' => 'The specified hotel does not exist.',
+            ]);
+        }
 
-        // Validamos la nueva cantidad total de habitaciones.
-        $this->validateTotalRooms($hotel, $quantityToAdd, $quantityToRemove);
+        // Se excluye la cantidad de la configuración actual
+        $existingRooms = $this->roomConfigurationRepository->getTotalRoomQuantityByHotelId($hotel->id);
+        $newTotal = $existingRooms - $configuration->quantity + $data['quantity'];
 
-        return $this->repository->update($id, $data);
+        $this->validateRoomsTotal($hotel, $newTotal, 'update');
+
+        $this->roomConfigurationRepository->update($id, $data);
+
+        return $this->roomConfigurationRepository->find($id);
     }
 
     /**
-     * Eliminar una configuración de habitación.
+     * Elimina una configuración de habitación por su ID.
      *
      * @param int $id
      * @return bool
      */
     public function delete(int $id): bool
     {
-        return $this->repository->delete($id);
+        return $this->roomConfigurationRepository->delete($id);
     }
 
     /**
-     * Valida que la cantidad total de habitaciones no supere el máximo del hotel.
+     * Valida que la cantidad total de habitaciones no exceda la capacidad del hotel.
      *
      * @param Hotel $hotel
-     * @param int $quantityToAdd
-     * @param int $quantityToRemove
-     * @return void
+     * @param int $newTotal
+     * @param string $operation
      * @throws ValidationException
      */
-    private function validateTotalRooms(Hotel $hotel, int $quantityToAdd, int $quantityToRemove = 0): void
+    private function validateRoomsTotal(Hotel $hotel, int $newTotal, string $operation): void
     {
-        // Se calcula la suma actual de habitaciones del hotel (excluyendo la que se va a eliminar).
-        $existingRooms = $this->repository->getTotalRoomQuantityByHotelId($hotel->id);
-        $totalRooms = $existingRooms - $quantityToRemove + $quantityToAdd;
+        if ($newTotal > $hotel->rooms_total) {
+            $message = $operation === 'create'
+                ? 'The total quantity of rooms exceeds the hotel\'s capacity of ' . $hotel->rooms_total . '.'
+                : 'The updated quantity of rooms exceeds the hotel\'s capacity of ' . $hotel->rooms_total . '.';
 
-        if ($totalRooms > $hotel->rooms_total) {
-            throw ValidationException::withMessages([
-                'quantity' => "La cantidad de habitaciones supera el máximo ({$hotel->rooms_total}) para este hotel."
-            ]);
+            throw ValidationException::withMessages(['quantity' => $message]);
         }
     }
 }

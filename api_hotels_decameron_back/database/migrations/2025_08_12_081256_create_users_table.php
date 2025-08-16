@@ -19,11 +19,6 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-
-            // Campo para el rol, sin la restricción de clave foránea.
-            // Es nullable para que un usuario pueda no tener rol asignado.
-            $table->unsignedBigInteger('role_id')->nullable();
-
             $table->timestamps();
         });
     }

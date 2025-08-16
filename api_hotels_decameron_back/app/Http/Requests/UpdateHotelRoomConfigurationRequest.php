@@ -22,29 +22,18 @@ class UpdateHotelRoomConfigurationRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Usa la tabla con el nombre corregido.
-        // La validación de unicidad ignora la configuración de habitación actual.
-        $hotelRoomConfigurationId = $this->route('hotelRoomConfigurationId');
+        // Accede a la configuración que se está actualizando a través de la ruta
+        $configurationId = $this->route('room_configuration')->id;
+        $hotelId = $this->route('hotel')->id;
 
         return [
             'room_type_id' => [
-                'sometimes',
+                'required',
                 'exists:room_types,id',
-                // Asegura la unicidad, ignorando la configuración actual.
-                Rule::unique('hotel_room_configurations')
-                    ->ignore($hotelRoomConfigurationId)
-                    ->where('hotel_id', $this->route('hotelId'))
-                    ->where('accommodation_id', $this->input('accommodation_id')),
+                // La regla 'unique' debe ignorar el ID actual y estar restringida al hotel_id
+                'unique:hotel_room_configurations,room_type_id,' . $configurationId . ',id,hotel_id,' . $hotelId
             ],
-            'accommodation_id' => [
-                'sometimes',
-                'exists:accommodations,id',
-            ],
-            'quantity' => [
-                'sometimes',
-                'integer',
-                'min:1',
-            ],
+            'quantity' => ['required', 'integer', 'min:1'],
         ];
     }
 }

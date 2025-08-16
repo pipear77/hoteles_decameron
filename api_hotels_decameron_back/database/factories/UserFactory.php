@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -14,32 +13,35 @@ use Illuminate\Support\Str;
 class UserFactory extends Factory
 {
     /**
-     * El nombre del modelo correspondiente al factory.
-     *
-     * @var string
+     * The current password being used by the factory.
      */
-    protected $model = User::class;
+    protected static ?string $password;
 
     /**
-     * Define el estado por defecto del modelo.
+     * Define the model's default state.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
-        // Se define un valor por defecto para 'role_id' para garantizar
-        // que la relación con el rol sea siempre consistente.
-        // Esto simplifica la creación de usuarios en los tests.
-        $role = Role::factory()->create();
-
         return [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
-            'email' => $this->faker->unique()->safeEmail,
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
+            'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => Hash::make('password'), // Se asegura de que la contraseña esté presente y hasheada
+            // La clave es el uso de Hash::make() aquí.
+            'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role_id' => Role::factory(), // Asocia el usuario a un rol recién creado
         ];
+    }
+
+    /**
+     * Indicate that the model's email address should be unverified.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
     }
 }

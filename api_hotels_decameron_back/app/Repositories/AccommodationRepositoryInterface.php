@@ -14,7 +14,6 @@ interface AccommodationRepositoryInterface
      */
     public function all(): Collection;
 
-
     /**
      * Encontrar una acomodación por su ID.
      *
@@ -23,28 +22,4 @@ interface AccommodationRepositoryInterface
      */
     public function find(int $id): ?Accommodation;
 
-    /**
-     * Crear una nueva acomodación.
-     *
-     * @param array $data
-     * @return Accommodation
-     */
-    public function create(array $data): Accommodation;
-
-    /**
-     * Actualizar una acomodación.
-     *
-     * @param int $id
-     * @param array $data
-     * @return Accommodation|null
-     */
-    public function update(int $id, array $data): ?Accommodation;
-
-    /**
-     * Eliminar una acomodación.
-     *
-     * @param int $id
-     * @return bool
-     */
-    public function delete(int $id): bool;
 }

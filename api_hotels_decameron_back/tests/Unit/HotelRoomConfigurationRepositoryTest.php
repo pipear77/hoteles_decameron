@@ -2,208 +2,258 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Models\Hotel;
 use App\Models\HotelRoomConfiguration;
 use App\Repositories\HotelRoomConfigurationRepository;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Mockery;
+use Tests\TestCase;
 
-/**
- * Clase de pruebas unitarias para HotelRoomConfigurationRepository.
- * Estas pruebas se centran en verificar la correcta interacción del repositorio
- * con la base de datos a través del modelo Eloquent.
- */
 class HotelRoomConfigurationRepositoryTest extends TestCase
 {
-    // Utiliza el trait RefreshDatabase para migrar y resetear la base de datos en cada test.
-    use RefreshDatabase;
-
-    private HotelRoomConfigurationRepository $repository;
+    /**
+     * @var Mockery\MockInterface|HotelRoomConfiguration
+     */
+    protected $modelMock;
 
     /**
-     * Configuración inicial para cada prueba.
-     * Se crea una instancia del repositorio.
+     * @var HotelRoomConfigurationRepository
+     */
+    protected $repository;
+
+    /**
+     * Set up the test environment.
+     * Esta es la clave. Antes de cada test, configuramos el mock del modelo.
+     * Esto nos permite "aislar" el repositorio y controlar lo que el modelo "debe hacer".
+     *
+     * @return void
      */
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repository = new HotelRoomConfigurationRepository();
+
+        // Creamos un "mock" del modelo. Es un objeto simulado.
+        // Ahora podemos controlar su comportamiento y asegurarnos de que el repositorio
+        // interactúe con él de la manera esperada.
+        $this->modelMock = Mockery::mock(HotelRoomConfiguration::class);
+
+        // Creamos la instancia del repositorio, inyectando el mock del modelo.
+        // Esto soluciona el `ArgumentCountError` de raíz.
+        $this->repository = new HotelRoomConfigurationRepository($this->modelMock);
     }
 
     /**
-     * @test
-     * Prueba que el método 'all' devuelve una colección de todas las configuraciones.
+     * Clean up the test environment.
+     * Esto asegura que los mocks sean liberados correctamente.
+     *
+     * @return void
      */
-    public function all_returns_all_room_configurations(): void
+    protected function tearDown(): void
     {
-        // ARRANGE: Se crean 5 configuraciones de habitación en la base de datos.
-        HotelRoomConfiguration::factory()->count(5)->create();
-
-        // ACT: Se llama al método 'all'.
-        $configurations = $this->repository->all();
-
-        // ASSERT: Se verifica que se devuelva una colección con 5 elementos.
-        $this->assertCount(5, $configurations);
-        $this->assertEquals(5, $configurations->count());
+        Mockery::close();
+        parent::tearDown();
     }
 
     /**
-     * @test
-     * Prueba que el método 'find' devuelve una configuración por su ID.
+     * Test that `all` returns all room configurations.
+     *
+     * @return void
      */
-    public function find_returns_a_specific_room_configuration(): void
+    public function test_all_returns_all_room_configurations(): void
     {
-        // ARRANGE: Se crea una configuración específica y otras para asegurar el aislamiento.
-        $targetConfiguration = HotelRoomConfiguration::factory()->create();
-        HotelRoomConfiguration::factory()->count(2)->create();
+        // Creamos una colección de Eloquent, no una colección genérica de Laravel.
+        // Esto es lo que Eloquent\Model::all() retorna realmente.
+        $configurations = new EloquentCollection([
+            new HotelRoomConfiguration(),
+            new HotelRoomConfiguration(),
+        ]);
 
-        // ACT: Se busca la configuración por su ID.
-        $foundConfiguration = $this->repository->find($targetConfiguration->id);
+        // Decimos al mock que cuando se llame a `all()`, debe devolver nuestra colección.
+        $this->modelMock->shouldReceive('all')->once()->andReturn($configurations);
 
-        // ASSERT: Se verifica que se encontró la configuración correcta.
-        $this->assertNotNull($foundConfiguration);
-        $this->assertEquals($targetConfiguration->id, $foundConfiguration->id);
+        $result = $this->repository->all();
+
+        // Verificamos que el resultado es una instancia de la colección de Eloquent
+        // y que el número de elementos es el esperado.
+        $this->assertInstanceOf(EloquentCollection::class, $result);
+        $this->assertCount(2, $result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'find' devuelve null si la configuración no existe.
+     * Test that `find` returns a specific room configuration.
+     *
+     * @return void
      */
-    public function find_returns_null_if_configuration_not_found(): void
+    public function test_find_returns_a_specific_room_configuration(): void
     {
-        // ARRANGE: La base de datos está vacía.
-        // ACT: Se busca una configuración con un ID que no existe.
-        $foundConfiguration = $this->repository->find(999);
+        // El mock ahora retorna una instancia del modelo, no un objeto genérico.
+        $configuration = new HotelRoomConfiguration();
 
-        // ASSERT: Se verifica que se devuelva null.
-        $this->assertNull($foundConfiguration);
+        // Se espera que el método `find` sea llamado una vez con el ID 1 y devuelva el objeto.
+        $this->modelMock->shouldReceive('find')->once()->with(1)->andReturn($configuration);
+
+        $result = $this->repository->find(1);
+
+        $this->assertInstanceOf(HotelRoomConfiguration::class, $result);
+        $this->assertEquals($configuration, $result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'getByHotelId' devuelve las configuraciones de un hotel específico.
+     * Test that `find` returns null if configuration not found.
+     *
+     * @return void
      */
-    public function get_by_hotel_id_returns_correct_configurations(): void
+    public function test_find_returns_null_if_configuration_not_found(): void
     {
-        // ARRANGE: Se crean hoteles y configuraciones para simular el escenario.
-        $hotel1 = Hotel::factory()->create();
-        $hotel2 = Hotel::factory()->create();
-        HotelRoomConfiguration::factory()->count(3)->create(['hotel_id' => $hotel1->id]);
-        HotelRoomConfiguration::factory()->count(2)->create(['hotel_id' => $hotel2->id]);
+        // El mock debe devolver null cuando se llame a `find` con un ID que no existe.
+        $this->modelMock->shouldReceive('find')->once()->with(999)->andReturn(null);
 
-        // ACT: Se obtienen las configuraciones del hotel 1.
-        $configurations = $this->repository->getByHotelId($hotel1->id);
+        $result = $this->repository->find(999);
 
-        // ASSERT: Se verifica que la cantidad sea la esperada y que todos pertenezcan al mismo hotel.
-        $this->assertCount(3, $configurations);
-        $configurations->each(function ($config) use ($hotel1) {
-            $this->assertEquals($hotel1->id, $config->hotel_id);
-        });
+        $this->assertNull($result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'getTotalRoomQuantityByHotelId' suma las cantidades de habitaciones de un hotel específico.
+     * Test that `get_by_hotel_id` returns correct configurations.
+     *
+     * @return void
      */
-    public function get_total_room_quantity_by_hotel_id_returns_sum_of_quantities(): void
+    public function test_get_by_hotel_id_returns_correct_configurations(): void
     {
-        // ARRANGE: Se crea un hotel y varias configuraciones con diferentes cantidades.
-        $hotel = Hotel::factory()->create();
-        HotelRoomConfiguration::factory()->create(['hotel_id' => $hotel->id, 'quantity' => 10]);
-        HotelRoomConfiguration::factory()->create(['hotel_id' => $hotel->id, 'quantity' => 5]);
-        HotelRoomConfiguration::factory()->create(['hotel_id' => $hotel->id, 'quantity' => 12]);
-        // Se crea otra configuración para otro hotel para asegurar que no se incluya.
-        HotelRoomConfiguration::factory()->create(['quantity' => 20]);
+        $hotelId = 1;
 
-        // ACT: Se cuenta la cantidad total de habitaciones para el hotel.
-        $totalQuantity = $this->repository->getTotalRoomQuantityByHotelId($hotel->id);
+        // El mock de la cadena de consulta ahora debe retornar una EloquentCollection.
+        $configurations = new EloquentCollection([
+            new HotelRoomConfiguration(['hotel_id' => $hotelId]),
+            new HotelRoomConfiguration(['hotel_id' => $hotelId]),
+        ]);
 
-        // ASSERT: Se verifica que la suma sea correcta (10 + 5 + 12 = 27).
-        $this->assertEquals(27, $totalQuantity);
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('get')->once()->andReturn($configurations);
+
+        $this->modelMock->shouldReceive('where')->once()->with('hotel_id', $hotelId)->andReturn($queryMock);
+
+        $result = $this->repository->getByHotelId($hotelId);
+
+        $this->assertInstanceOf(EloquentCollection::class, $result);
+        $this->assertCount(2, $result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'create' crea una nueva configuración de habitación.
+     * Test that `get_total_room_quantity_by_hotel_id` returns sum of quantities.
+     *
+     * @return void
      */
-    public function create_creates_a_new_room_configuration(): void
+    public function test_get_total_room_quantity_by_hotel_id_returns_sum_of_quantities(): void
     {
-        // ARRANGE: Se preparan los datos para la nueva configuración.
-        $data = HotelRoomConfiguration::factory()->raw();
-        $initialCount = HotelRoomConfiguration::count();
+        $hotelId = 1;
+        $totalQuantity = 15;
 
-        // ACT: Se crea la nueva configuración.
-        $newConfiguration = $this->repository->create($data);
+        // Mockeamos la cadena de métodos `where` y `sum`.
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('sum')->once()->with('quantity')->andReturn($totalQuantity);
 
-        // ASSERT: Se verifica que se ha creado un nuevo registro en la base de datos y que los datos son correctos.
-        $this->assertCount($initialCount + 1, HotelRoomConfiguration::all());
-        $this->assertDatabaseHas('hotel_room_configurations', ['id' => $newConfiguration->id]);
-        $this->assertEquals($data['quantity'], $newConfiguration->quantity);
+        $this->modelMock->shouldReceive('where')->once()->with('hotel_id', $hotelId)->andReturn($queryMock);
+
+        $result = $this->repository->getTotalRoomQuantityByHotelId($hotelId);
+
+        $this->assertEquals($totalQuantity, $result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'update' actualiza una configuración existente.
+     * Test that `create` creates a new room configuration.
+     *
+     * @return void
      */
-    public function update_modifies_an_existing_configuration(): void
+    public function test_create_creates_a_new_room_configuration(): void
     {
-        // ARRANGE: Se crea una configuración y se definen los nuevos datos.
-        $configuration = HotelRoomConfiguration::factory()->create();
-        $updatedData = ['quantity' => 20];
+        $data = ['hotel_id' => 1, 'room_type_id' => 1, 'quantity' => 10];
+        // El mock ahora retorna una instancia del modelo, no un objeto genérico.
+        $newConfiguration = new HotelRoomConfiguration($data);
 
-        // ACT: Se actualiza la configuración.
-        $updatedConfiguration = $this->repository->update($configuration->id, $updatedData);
+        // Se espera que el método `create` sea llamado una vez con los datos y devuelva el nuevo objeto.
+        $this->modelMock->shouldReceive('create')->once()->with($data)->andReturn($newConfiguration);
 
-        // ASSERT: Se verifica que la configuración fue actualizada correctamente en la base de datos.
-        $this->assertNotNull($updatedConfiguration);
-        $this->assertEquals(20, $updatedConfiguration->quantity);
-        $this->assertDatabaseHas('hotel_room_configurations', ['id' => $configuration->id, 'quantity' => 20]);
+        $result = $this->repository->create($data);
+
+        $this->assertInstanceOf(HotelRoomConfiguration::class, $result);
+        $this->assertEquals($newConfiguration, $result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'update' devuelve null si la configuración no existe.
+     * Test that `update` modifies an existing configuration.
+     *
+     * @return void
      */
-    public function update_returns_null_if_configuration_not_found(): void
+    public function test_update_modifies_an_existing_configuration(): void
     {
-        // ARRANGE: Se prepara un ID que no existe.
-        $updatedData = ['quantity' => 15];
+        $id = 1;
+        $data = ['quantity' => 20];
 
-        // ACT: Se intenta actualizar.
-        $updatedConfiguration = $this->repository->update(999, $updatedData);
+        // Creamos un mock del modelo que va a ser retornado por find().
+        $existingConfiguration = Mockery::mock(HotelRoomConfiguration::class);
 
-        // ASSERT: Se verifica que se devuelva null.
-        $this->assertNull($updatedConfiguration);
+        // Mockeamos la llamada a update() en ese mock y verificamos que se llama con los datos correctos.
+        // No necesitamos que retorne nada, solo verificar que se llama.
+        $existingConfiguration->shouldReceive('update')->once()->with($data);
+
+        // El mock de find() debe retornar el mock que creamos arriba.
+        $this->modelMock->shouldReceive('find')->once()->with($id)->andReturn($existingConfiguration);
+
+        $result = $this->repository->update($id, $data);
+
+        // Ahora, verificamos que el resultado del repositorio es el mismo mock que esperábamos.
+        $this->assertEquals($existingConfiguration, $result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'delete' elimina una configuración de habitación.
+     * Test that `update` returns null if configuration not found.
+     *
+     * @return void
      */
-    public function delete_removes_a_room_configuration(): void
+    public function test_update_returns_null_if_configuration_not_found(): void
     {
-        // ARRANGE: Se crea una configuración para ser eliminada.
-        $configuration = HotelRoomConfiguration::factory()->create();
+        $id = 999;
+        $data = ['quantity' => 20];
 
-        // ACT: Se llama al método 'delete'.
-        $isDeleted = $this->repository->delete($configuration->id);
+        // Mockeamos que el modelo no encuentra la configuración.
+        $this->modelMock->shouldReceive('find')->once()->with($id)->andReturn(null);
 
-        // ASSERT: Se verifica que el método devuelva true y que el registro ya no exista en la base de datos.
-        $this->assertTrue($isDeleted);
-        $this->assertDatabaseMissing('hotel_room_configurations', ['id' => $configuration->id]);
+        $result = $this->repository->update($id, $data);
+
+        $this->assertNull($result);
     }
 
     /**
-     * @test
-     * Prueba que el método 'delete' devuelve false si la configuración no existe.
+     * Test that `delete` removes a room configuration.
+     *
+     * @return void
      */
-    public function delete_returns_false_if_configuration_not_found(): void
+    public function test_delete_removes_a_room_configuration(): void
     {
-        // ARRANGE: La base de datos está vacía.
-        // ACT: Se intenta eliminar una configuración con un ID que no existe.
-        $isDeleted = $this->repository->delete(999);
+        $id = 1;
+        $existingConfiguration = Mockery::mock(HotelRoomConfiguration::class);
+        $existingConfiguration->shouldReceive('delete')->once()->andReturn(true);
 
-        // ASSERT: Se verifica que el método devuelva false.
-        $this->assertFalse($isDeleted);
+        $this->modelMock->shouldReceive('find')->once()->with($id)->andReturn($existingConfiguration);
+
+        $result = $this->repository->delete($id);
+
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test that `delete` returns false if configuration not found.
+     *
+     * @return void
+     */
+    public function test_delete_returns_false_if_configuration_not_found(): void
+    {
+        $id = 999;
+
+        $this->modelMock->shouldReceive('find')->once()->with($id)->andReturn(null);
+
+        $result = $this->repository->delete($id);
+
+        $this->assertFalse($result);
     }
 }

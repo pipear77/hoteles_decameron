@@ -10,7 +10,7 @@ interface HotelRepositoryInterface
     /**
      * Obtener todos los hoteles.
      *
-     * @return Collection<int, Hotel>
+     * @return Collection
      */
     public function all(): Collection;
 
@@ -22,14 +22,19 @@ interface HotelRepositoryInterface
      */
     public function find(int $id): ?Hotel;
 
+
+    public function getHotelByIdWithCity(int $id): ?Hotel;
+
     /**
-     * Encontrar un hotel por su nombre.
+     * Busca hoteles por su nombre (utiliza un 'like').
+     *
+     * Renombrado de 'findByName' a 'searchByName' para ser más explícito
+     * sobre el comportamiento de búsqueda con 'like'.
      *
      * @param string $name
      * @return Collection<int, Hotel>
-    */
-    public function findByName(string $name): Collection;
-
+     */
+    public function searchByName(string $name): Collection;
 
     /**
      * Crear un nuevo hotel.

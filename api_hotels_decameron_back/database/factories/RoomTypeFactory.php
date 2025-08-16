@@ -1,4 +1,5 @@
 <?php
+// src/database/factories/RoomTypeFactory.php
 
 namespace Database\Factories;
 
@@ -11,24 +12,22 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class RoomTypeFactory extends Factory
 {
     /**
-     * Define el nombre del modelo asociado al factory.
+     * The name of the factory's corresponding model.
      *
      * @var string
      */
     protected $model = RoomType::class;
 
     /**
-     * Define el estado por defecto del modelo.
+     * Define the default state of the model.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            // El 'name' se genera de forma única para cumplir con la restricción de la base de datos.
-            'name' => $this->faker->unique()->word . ' ' . $this->faker->word,
-            // La 'description' es opcional, pero es buena práctica poblarla para pruebas.
-            'description' => $this->faker->sentence(10),
+            'name' => $this->faker->unique()->word(),
+            'description' => $this->faker->sentence(),
         ];
     }
 }

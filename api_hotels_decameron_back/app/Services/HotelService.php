@@ -2,70 +2,171 @@
 
 namespace App\Services;
 
+use App\Models\Accommodation;
 use App\Models\Hotel;
+use App\Models\RoomType;
 use App\Repositories\HotelRepositoryInterface;
+use App\Repositories\HotelRoomConfigurationRepositoryInterface;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class HotelService implements HotelServiceInterface
 {
-    public function __construct(private HotelRepositoryInterface $repository) {}
+    /**
+     * @var HotelRepositoryInterface
+     */
+    protected HotelRepositoryInterface $hotelRepository;
 
     /**
-     * Obtener todos los hoteles, con un filtro opcional por nombre.
+     * @var HotelRoomConfigurationRepositoryInterface
+     */
+    protected HotelRoomConfigurationRepositoryInterface $roomConfigurationRepository;
+
+    public function __construct(
+        HotelRepositoryInterface $hotelRepository,
+        HotelRoomConfigurationRepositoryInterface $roomConfigurationRepository
+    ) {
+        $this->hotelRepository = $hotelRepository;
+        $this->roomConfigurationRepository = $roomConfigurationRepository;
+    }
+
+    /**
+     * Obtiene todos los hoteles, opcionalmente filtrados por nombre.
      *
      * @param string|null $name
-     * @return Collection<int, Hotel>
+     * @return Collection
      */
     public function getAll(?string $name = null): Collection
     {
-        if ($name) {
-            return $this->repository->findByName($name);
-        }
-        return $this->repository->all();
+        // Se pasa una cadena vacía en lugar de null al repositorio.
+        return $this->hotelRepository->searchByName($name ?? '');
     }
 
     /**
-     * Obtener un hotel por su ID.
+     * Obtiene un hotel por ID, con la relación de la ciudad.
      *
      * @param int $id
      * @return Hotel|null
      */
-    public function getById(int $id): ?Hotel
+    public function getByIdWithCity(int $id): ?Hotel
     {
-        return $this->repository->find($id);
+        return $this->hotelRepository->getHotelByIdWithCity($id);
     }
 
     /**
-     * Crear un nuevo hotel.
+     * Crea un nuevo hotel y sus configuraciones de habitaciones asociadas.
      *
-     * @param array<string, mixed> $data
+     * @param array $data Los datos del hotel, incluyendo las configuraciones de habitaciones.
      * @return Hotel
+     * @throws Exception
      */
     public function create(array $data): Hotel
     {
-        return $this->repository->create($data);
+        return DB::transaction(function () use ($data) {
+
+            $roomConfigurations = $data['room_configurations'] ?? [];
+            unset($data['room_configurations']);
+
+            $hotel = Hotel::create($data);
+
+            foreach ($roomConfigurations as $config) {
+
+                // Validación para asegurarnos de que la clave 'accommodation' existe en el JSON de entrada.
+                if (!isset($config['accommodation'])) {
+                    throw new Exception("Missing required key 'accommodation' in a room configuration.");
+                }
+
+                $roomType = RoomType::where('name', $config['room_type'])->first();
+                $accommodation = Accommodation::where('name', $config['accommodation'])->first();
+
+                if (!$roomType) {
+                    throw new Exception("Room type '{$config['room_type']}' not found.");
+                }
+
+                if (!$accommodation) {
+                    throw new Exception("Accommodation type '{$config['accommodation']}' not found.");
+                }
+
+                $hotel->roomConfigurations()->create([
+                    'room_type_id' => $roomType->id,
+                    'accommodation_id' => $accommodation->id,
+                    'quantity' => $config['quantity'],
+                ]);
+            }
+
+            return $hotel;
+        });
     }
 
     /**
-     * Actualizar un hotel existente.
+     * Actualiza un hotel existente y sus configuraciones de habitaciones.
      *
      * @param int $id
-     * @param array<string, mixed> $data
+     * @param array $data
      * @return Hotel|null
+     * @throws Exception
      */
     public function update(int $id, array $data): ?Hotel
     {
-        return $this->repository->update($id, $data);
+        \Log::info('UpdateHotelRequest - Data recibida en service:', $data);
+        return DB::transaction(function () use ($id, $data) {
+            $hotel = Hotel::find($id);
+
+            if (!$hotel) {
+                return null;
+            }
+
+            // Actualizamos los datos del hotel
+            $hotel->update($data);
+
+            // Si vienen configuraciones de habitaciones, las reemplazamos
+            if (isset($data['room_configurations'])) {
+                // Primero borramos las existentes (si quieres reemplazar)
+                $hotel->roomConfigurations()->delete();
+
+                // Creamos las nuevas
+                $hotel->roomConfigurations()->createMany(
+                    collect($data['room_configurations'])->map(function ($config) {
+                        return [
+                            'room_type_id'     => $config['room_type_id'],
+                            'accommodation_id' => $config['accommodation_id'],
+                            'quantity'         => $config['quantity'],
+                        ];
+                    })->toArray()
+                );
+            }
+
+            return $hotel->fresh(['roomConfigurations']);
+        });
     }
 
     /**
-     * Eliminar un hotel existente.
+     * Elimina un hotel y sus configuraciones de habitaciones asociadas.
      *
      * @param int $id
      * @return bool
      */
     public function delete(int $id): bool
     {
-        return $this->repository->delete($id);
+        return $this->hotelRepository->delete($id);
+    }
+
+    /**
+     * Crea las configuraciones de habitaciones.
+     *
+     * @param int $hotelId
+     * @param array $configurations
+     * @return void
+     */
+    private function createRoomConfigurations(int $hotelId, array $configurations): void
+    {
+        foreach ($configurations as $config) {
+            $this->roomConfigurationRepository->create([
+                'hotel_id' => $hotelId,
+                'room_type' => $config['room_type'],
+                'quantity' => $config['quantity'],
+            ]);
+        }
     }
 }

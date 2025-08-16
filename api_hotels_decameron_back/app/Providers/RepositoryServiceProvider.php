@@ -33,25 +33,29 @@ use App\Services\UserServiceInterface;
 class RepositoryServiceProvider extends ServiceProvider
 {
     /**
-     * Register services.
+     * Registra las vinculaciones de los repositorios.
+     *
+     * @return void
      */
     public function register(): void
     {
-        // Vinculaciones de Repositorios
-        $this->app->bind(AccommodationRepositoryInterface::class, AccommodationRepository::class);
-        $this->app->bind(HotelRepositoryInterface::class, HotelRepository::class);
-        $this->app->bind(HotelRoomConfigurationRepositoryInterface::class, HotelRoomConfigurationRepository::class);
-        $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
-        $this->app->bind(RoomTypeRepositoryInterface::class, RoomTypeRepository::class);
-        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        // Vinculaciones para el dominio de Hoteles
+        $this->app->bind(
+            HotelRepositoryInterface::class,
+            HotelRepository::class
+        );
 
-        // Vinculaciones de Servicios
-        $this->app->bind(AccommodationServiceInterface::class, AccommodationService::class);
-        $this->app->bind(HotelServiceInterface::class, HotelService::class);
-        $this->app->bind(HotelRoomConfigurationServiceInterface::class, HotelRoomConfigurationService::class);
-        $this->app->bind(RoleServiceInterface::class, RoleService::class);
-        $this->app->bind(RoomTypeServiceInterface::class, RoomTypeService::class);
-        $this->app->bind(UserServiceInterface::class, UserService::class);
+        // Vinculaciones para el dominio de Acomodaciones
+        $this->app->bind(
+            AccommodationRepositoryInterface::class,
+            AccommodationRepository::class
+        );
+
+        // Vinculaciones para el dominio de Tipos de Habitación
+        $this->app->bind(
+            RoomTypeRepositoryInterface::class,
+            RoomTypeRepository::class
+        );
     }
 
     /**

@@ -1,21 +1,22 @@
 <?php
+// src/database/factories/CityFactory.php
 
 namespace Database\Factories;
 
-use App\Models\Accommodation;
+use App\Models\City;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<Accommodation>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<City>
  */
-class AccommodationFactory extends Factory
+class CityFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var string
      */
-    protected $model = Accommodation::class;
+    protected $model = City::class;
 
     /**
      * Define the default state of the model.
@@ -25,8 +26,7 @@ class AccommodationFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->word(),
-            'description' => $this->faker->sentence(),
+            'name' => $this->faker->city(),
         ];
     }
 }

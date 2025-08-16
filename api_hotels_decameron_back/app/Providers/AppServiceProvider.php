@@ -2,9 +2,20 @@
 
 namespace App\Providers;
 
+use App\Repositories\AccommodationRepository;
+use App\Repositories\AccommodationRepositoryInterface;
+use App\Repositories\HotelRepository;
+use App\Repositories\HotelRepositoryInterface;
+use App\Repositories\HotelRoomConfigurationRepository;
+use App\Repositories\HotelRoomConfigurationRepositoryInterface;
+use App\Repositories\RoomTypeRepository;
+use App\Repositories\RoomTypeRepositoryInterface;
+use App\Services\HotelRoomConfigurationService;
+use App\Services\HotelRoomConfigurationServiceInterface;
+use App\Services\HotelService;
+use App\Services\HotelServiceInterface;
 use App\Services\UserService;
 use App\Services\UserServiceInterface;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -14,19 +25,41 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Vinculación de interfaces a implementaciones concretas
         $this->app->bind(
-            \App\Repositories\HotelRepositoryInterface::class,
-            \App\Repositories\HotelRepository::class
+            HotelServiceInterface::class,
+            HotelService::class
         );
 
         $this->app->bind(
-            \App\Services\HotelServiceInterface::class,
-            \App\Services\HotelService::class
+            HotelRepositoryInterface::class,
+            HotelRepository::class
         );
 
-        // Esto le dice a Laravel: "Cuando veas la interfaz 'UserServiceInterface',
-        // usa la clase concreta 'UserService' para resolverla."
+        $this->app->bind(
+            AccommodationRepositoryInterface::class,
+            AccommodationRepository::class
+        );
+
+        $this->app->bind(
+            RoomTypeRepositoryInterface::class,
+            RoomTypeRepository::class
+        );
+
+        // CORRECCIÓN: Se añade la vinculación que faltaba para el repositorio de configuraciones de habitaciones.
+        // Esto resuelve el error de dependencia en la cadena de inyección.
+        $this->app->bind(
+            HotelRoomConfigurationRepositoryInterface::class,
+            HotelRoomConfigurationRepository::class
+        );
+
+        $this->app->bind(
+            HotelRoomConfigurationServiceInterface::class,
+            HotelRoomConfigurationService::class
+        );
+
         $this->app->bind(UserServiceInterface::class, UserService::class);
+
     }
 
     /**
@@ -34,8 +67,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
-            return config('app.frontend_url')."/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
-        });
+        //
     }
 }

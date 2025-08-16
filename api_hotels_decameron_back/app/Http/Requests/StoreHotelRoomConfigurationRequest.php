@@ -9,6 +9,8 @@ class StoreHotelRoomConfigurationRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * @return bool
      */
     public function authorize(): bool
     {
@@ -18,19 +20,17 @@ class StoreHotelRoomConfigurationRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
-        // Usa la tabla con el nombre corregido.
+        // Se obtiene el ID del hotel de la ruta o del input, para mayor robustez.
+        $hotelId = $this->route('hotel') ? $this->route('hotel')->id : $this->input('hotel_id');
+
         return [
             'room_type_id' => [
                 'required',
                 'exists:room_types,id',
-                // Asegura una combinación única de tipo de habitación y acomodación por hotel.
-                Rule::unique('hotel_room_configurations')
-                    ->where('hotel_id', $this->route('hotelId'))
-                    ->where('accommodation_id', $this->input('accommodation_id')),
             ],
             'accommodation_id' => [
                 'required',
