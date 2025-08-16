@@ -73,6 +73,7 @@ class HotelControllerTest extends TestCase
     public function it_can_store_a_new_hotel(): void
     {
         $city = City::factory()->create();
+
         $hotelData = [
             'name' => $this->faker->company(),
             'address' => $this->faker->address(),
@@ -81,8 +82,8 @@ class HotelControllerTest extends TestCase
             'city_id' => $city->id,
             'rooms_total' => 30,
             'room_configurations' => [
-                ['room_type' => 'single', 'quantity' => 10],
-                ['room_type' => 'double', 'quantity' => 20],
+                ['room_type' => 'ESTANDAR', 'accommodation' => 'SENCILLA', 'quantity' => 10],
+                ['room_type' => 'SUITE', 'accommodation' => 'DOBLE', 'quantity' => 20],
             ],
         ];
 
@@ -92,6 +93,11 @@ class HotelControllerTest extends TestCase
         $this->hotelServiceMock
             ->shouldReceive('create')
             ->once()
+            ->with(Mockery::on(function ($data) use ($hotelData) {
+                return $data['name'] === $hotelData['name']
+                    && $data['nit'] === $hotelData['nit']
+                    && count($data['room_configurations']) === 2;
+            }))
             ->andReturn($createdHotel);
 
         $response = $this->postJson('/api/hotels', $hotelData);
@@ -103,30 +109,25 @@ class HotelControllerTest extends TestCase
     /** @test */
     public function it_returns_422_on_store_with_invalid_data(): void
     {
-        // Corregido: Datos inválidos que causan errores de validación.
-        // Se ha dejado 'room_configurations' fuera del array para probar el error de campo requerido.
+        // Datos inválidos para disparar la validación
         $invalidData = [
-            'name' => '',
+            'name' => '', // requerido
             'address' => '123 Main St',
-            'nit' => '123456789',
-            'rooms_total' => 'cinco',
-            'email' => 'invalid-email',
-            'city_id' => 9999,
-            'room_configurations' => [], // Agregamos este campo vacío para que la validación lo tome en cuenta.
+            'nit' => '123456789', // formato inválido
+            'rooms_total' => 'cinco', // debe ser número
+            'city_id' => 9999, // ciudad inexistente
+            'room_configurations' => [], // no cumple reglas de validación
         ];
 
         $this->hotelServiceMock->shouldNotReceive('create');
 
         $response = $this->postJson('/api/hotels', $invalidData);
 
-        // Corregido: Se espera que la validación falle por `room_configurations` ya que no está correctamente formateado.
-        // La suma de las cantidades de habitaciones no coincide con la cantidad total de habitaciones del hotel.
         $response->assertStatus(422)
             ->assertJsonValidationErrors([
                 'name',
                 'nit',
                 'rooms_total',
-                'email',
                 'city_id',
                 'room_configurations',
             ]);

@@ -32,7 +32,6 @@ class UpdateHotelRequest extends FormRequest
             'nit' => ['sometimes', 'required', 'string', 'max:10', 'min:10',
                 Rule::unique('hotels', 'nit')->ignore($hotelId, 'id')],
             'rooms_total' => ['sometimes', 'required', 'integer', 'min:1'],
-            'email' => ['sometimes', 'required', 'email', 'max:255'],
             'city_id' => ['sometimes', 'required', 'exists:cities,id'],
 
             // Validación de las configuraciones de habitaciones.

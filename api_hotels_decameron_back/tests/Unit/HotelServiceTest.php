@@ -1,105 +1,43 @@
 <?php
-// src/tests/Unit/HotelServiceTest.php
 
 namespace Tests\Unit;
 
-use App\Models\Hotel;
-use App\Models\HotelRoomConfiguration;
-use App\Repositories\HotelRepositoryInterface;
-use App\Repositories\HotelRoomConfigurationRepositoryInterface;
-use App\Services\HotelService;
-use Exception;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Validation\ValidationException;
-use Mockery;
 use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Services\HotelService;
+use App\Models\User;
+use App\Models\Hotel;
+use App\Models\RoomType;
+use App\Models\Accommodation;
+use App\Models\City;
 
-/**
- * Pruebas unitarias para la clase HotelService.
- *
- * Estas pruebas verifican que la lógica del servicio delega correctamente
- * las responsabilidades a los repositorios y maneja la lógica de negocio,
- * incluyendo las transacciones, de forma atómica y coherente.
- */
 class HotelServiceTest extends TestCase
 {
-    /**
-     * @var HotelRepositoryInterface|Mockery\MockInterface
-     */
-    protected $hotelRepository;
+    use RefreshDatabase;
 
-    /**
-     * @var HotelRoomConfigurationRepositoryInterface|Mockery\MockInterface
-     */
-    protected $roomConfigurationRepository;
+    protected HotelService $hotelService;
+    protected User $user;
+    protected City $city;
+    protected RoomType $roomType;
+    protected Accommodation $accommodation;
 
-    /**
-     * @var HotelService
-     */
-    protected $hotelService;
-
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
-        Mockery::close();
 
-        // Crear los mocks para las dependencias.
-        $this->hotelRepository = Mockery::mock(HotelRepositoryInterface::class);
-        $this->roomConfigurationRepository = Mockery::mock(HotelRoomConfigurationRepositoryInterface::class);
+        // Crear los registros mínimos que exigen las FKs y la lógica de negocio
+        $this->user = User::factory()->create();
+        $this->city = City::factory()->create();
 
-        // Instanciar el servicio con los mocks.
-        $this->hotelService = new HotelService(
-            $this->hotelRepository,
-            $this->roomConfigurationRepository
-        );
+        // Crear room type y accommodation con los nombres que usa el service
+        $this->roomType = RoomType::factory()->create(['name' => 'ESTANDAR']);
+        $this->accommodation = Accommodation::factory()->create(['name' => 'SENCILLA']);
+
+        // Instancia el service real (usa Eloquent internamente)
+        $this->hotelService = app(HotelService::class);
     }
 
-    protected function tearDown(): void
-    {
-        Mockery::close();
-        parent::tearDown();
-    }
-
-    /**
-     * Prueba que 'getAll' delega al repositorio de hoteles.
-     *
-     * @test
-     */
-    public function it_delegates_get_all_to_hotel_repository(): void
-    {
-        $this->hotelRepository->shouldReceive('searchByName')
-            ->once()
-            ->with('') // CORRECCIÓN: El mock ahora espera una cadena vacía en lugar de null
-            ->andReturn(new Collection([]));
-
-        $result = $this->hotelService->getAll();
-
-        $this->assertInstanceOf(Collection::class, $result);
-    }
-
-    /**
-     * Prueba que 'getByIdWithCity' delega al repositorio de hoteles.
-     *
-     * @test
-     */
-    public function it_delegates_get_by_id_with_city_to_hotel_repository(): void
-    {
-        $hotel = Hotel::factory()->make(['id' => 1]);
-        $this->hotelRepository->shouldReceive('getHotelByIdWithCity')
-            ->once()
-            ->with(1)
-            ->andReturn($hotel);
-
-        $result = $this->hotelService->getByIdWithCity(1);
-
-        $this->assertEquals($hotel, $result);
-    }
-
-    /**
-     * Prueba que 'create' delega a ambos repositorios y maneja la transacción.
-     *
-     * @test
-     */
+    /** @test */
     public function it_creates_a_new_hotel_and_its_room_configurations(): void
     {
         $hotelData = [
@@ -107,128 +45,106 @@ class HotelServiceTest extends TestCase
             'address' => '123 Main St',
             'nit' => '1234567890',
             'rooms_total' => 10,
-            'email' => 'contact@newhotel.com',
-            'city_id' => 1,
+            'city_id' => $this->city->id,
+            'user_id' => $this->user->id,
             'room_configurations' => [
-                ['room_type' => 'Standard', 'quantity' => 10]
-            ]
+                // create() espera nombres en strings y los resuelve a ids
+                ['room_type' => 'ESTANDAR', 'accommodation' => 'SENCILLA', 'quantity' => 10],
+            ],
         ];
-        $createdHotel = Hotel::factory()->make(['id' => 1]);
 
-        $this->hotelRepository->shouldReceive('create')
-            ->once()
-            ->with(Mockery::subset(collect($hotelData)->except('room_configurations')->all()))
-            ->andReturn($createdHotel);
+        $hotel = $this->hotelService->create($hotelData);
 
-        $this->roomConfigurationRepository->shouldReceive('create')
-            ->once()
-            ->with(Mockery::subset([
-                'hotel_id' => $createdHotel->id,
-                'room_type' => 'Standard',
-                'quantity' => 10
-            ]));
+        $this->assertInstanceOf(Hotel::class, $hotel);
 
-        $result = $this->hotelService->create($hotelData);
+        // Comprueba que el registro se creó en la BD
+        $this->assertDatabaseHas('hotels', [
+            'id' => $hotel->id,
+            'name' => 'Nuevo Hotel',
+            'nit' => '1234567890',
+            'user_id' => $this->user->id,
+            'city_id' => $this->city->id,
+        ]);
 
-        $this->assertEquals($createdHotel, $result);
+        // Comprueba que la configuración de habitación se creó
+        $this->assertDatabaseHas('hotel_room_configurations', [
+            'hotel_id' => $hotel->id,
+            'quantity' => 10,
+        ]);
     }
 
-    /**
-     * Prueba que 'update' delega a ambos repositorios y maneja la transacción.
-     *
-     * @test
-     */
+    /** @test */
     public function it_updates_an_existing_hotel_and_its_room_configurations(): void
     {
-        $hotel = Hotel::factory()->make(['id' => 1]);
+        // Crear hotel existente (vía factory) ligado al user y a la ciudad
+        $hotel = Hotel::factory()->create([
+            'user_id' => $this->user->id,
+            'city_id' => $this->city->id,
+            'rooms_total' => 2,
+        ]);
+
+        // Crear otra acomodación/room type si quieres usar distintos ids en el update
+        $rt = RoomType::factory()->create(['name' => 'SUITE']);
+        $acc = Accommodation::factory()->create(['name' => 'DOBLE']);
+
         $updatedData = [
             'name' => 'Hotel Actualizado',
             'address' => '456 Oak St',
-            'nit' => '1234567890',
+            'nit' => '2711977740',
             'rooms_total' => 5,
-            'email' => 'contact@updatedhotel.com',
-            'city_id' => 1,
+            'city_id' => $this->city->id,
+            'user_id' => $this->user->id,
+            // update() espera ids para room_configurations
             'room_configurations' => [
-                ['room_type' => 'Suite', 'quantity' => 5]
+                [
+                    'room_type_id' => $rt->id,
+                    'accommodation_id' => $acc->id,
+                    'quantity' => 5
+                ]
             ]
         ];
 
-        $this->hotelRepository->shouldReceive('find')
-            ->once()
-            ->with(1)
-            ->andReturn($hotel);
+        $result = $this->hotelService->update($hotel->id, $updatedData);
 
-        $this->hotelRepository->shouldReceive('update')
-            ->once()
-            ->with(1, Mockery::subset(collect($updatedData)->except('room_configurations')->all()))
-            ->andReturn($hotel);
+        $this->assertNotNull($result);
+        $this->assertInstanceOf(Hotel::class, $result);
+        $this->assertEquals('Hotel Actualizado', $result->name);
 
-        // Se simula la eliminación y creación de las configuraciones de habitaciones.
-        $this->roomConfigurationRepository->shouldReceive('deleteByHotelId')
-            ->once()
-            ->with(1);
-
-        $this->roomConfigurationRepository->shouldReceive('create')
-            ->once()
-            ->with(Mockery::subset([
-                'hotel_id' => 1,
-                'room_type' => 'Suite',
-                'quantity' => 5
-            ]));
-
-        $result = $this->hotelService->update(1, $updatedData);
-
-        $this->assertEquals($hotel, $result);
+        // Aseguramos que la tabla de configuraciones ahora tenga el nuevo registro
+        $this->assertDatabaseHas('hotel_room_configurations', [
+            'hotel_id' => $hotel->id,
+            'room_type_id' => $rt->id,
+            'accommodation_id' => $acc->id,
+            'quantity' => 5,
+        ]);
     }
 
-    /**
-     * Prueba que 'update' devuelve null si el hotel no existe.
-     *
-     * @test
-     */
+    /** @test */
     public function it_returns_null_when_updating_a_non_existent_hotel(): void
     {
-        $this->hotelRepository->shouldReceive('find')
-            ->once()
-            ->with(999)
-            ->andReturn(null);
-
-        $result = $this->hotelService->update(999, ['name' => 'Non Existent Hotel']);
+        $result = $this->hotelService->update(999999, [
+            'name' => 'Non Existent Hotel',
+            'user_id' => $this->user->id,
+        ]);
 
         $this->assertNull($result);
     }
 
-    /**
-     * Prueba que 'delete' delega al repositorio de hoteles.
-     *
-     * @test
-     */
+    /** @test */
     public function it_deletes_a_hotel(): void
     {
-        $this->hotelRepository->shouldReceive('delete')
-            ->once()
-            ->with(1)
-            ->andReturn(true);
+        $hotel = Hotel::factory()->create(['user_id' => $this->user->id, 'city_id' => $this->city->id]);
 
-        $result = $this->hotelService->delete(1);
+        $deleted = $this->hotelService->delete($hotel->id);
 
-        $this->assertTrue($result);
+        $this->assertTrue($deleted);
+        $this->assertDatabaseMissing('hotels', ['id' => $hotel->id]);
     }
 
-    /**
-     * Prueba que 'delete' devuelve false si el hotel no existe.
-     *
-     * @test
-     */
+    /** @test */
     public function it_returns_false_when_deleting_a_non_existent_hotel(): void
     {
-        $this->hotelRepository->shouldReceive('delete')
-            ->once()
-            ->with(999)
-            ->andReturn(false);
-
-        $result = $this->hotelService->delete(999);
-
-        $this->assertFalse($result);
+        $deleted = $this->hotelService->delete(999999);
+        $this->assertFalse($deleted);
     }
 }

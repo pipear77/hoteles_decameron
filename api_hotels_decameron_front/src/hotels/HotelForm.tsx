@@ -3,23 +3,23 @@ import type { Hotel, HotelPayload, RoomConfiguration } from "./types";
 
 /** 🔧 Ajusta estos catálogos a tus IDs reales en BD */
 const CITIES = [
-  { id: 1, name: "CARTAGENA" },
-  { id: 2, name: "BOGOTA" },
-  { id: 3, name: "MEDELLIN" },
-  { id: 4, name: "ARMENIA" },
+    { id: 1, name: "CARTAGENA" },
+    { id: 2, name: "BOGOTA" },
+    { id: 3, name: "MEDELLIN" },
+    { id: 4, name: "ARMENIA" },
 ];
 
 const ACCOMMODATIONS = [
-  { id: 1, name: "SENCILLA" },
-  { id: 2, name: "DOBLE" },
-  { id: 3, name: "TRIPLE" },
-  { id: 4, name: "CUADRUPLE" },
+    { id: 1, name: "SENCILLA" },
+    { id: 2, name: "DOBLE" },
+    { id: 3, name: "TRIPLE" },
+    { id: 4, name: "CUADRUPLE" },
 ];
 
 const ROOM_TYPES = [
-  { id: 1, name: "ESTANDAR", allowed: [1, 2] },   // SENCILLA, DOBLE
-  { id: 2, name: "JUNIOR", allowed: [3, 4] },     // TRIPLE, CUADRUPLE
-  { id: 3, name: "SUITE", allowed: [1, 2, 3] },   // SENCILLA, DOBLE, TRIPLE
+    { id: 1, name: "ESTANDAR", allowed: [1, 2] },   // SENCILLA, DOBLE
+    { id: 2, name: "JUNIOR", allowed: [3, 4] },     // TRIPLE, CUADRUPLE
+    { id: 3, name: "SUITE", allowed: [1, 2, 3] },   // SENCILLA, DOBLE, TRIPLE
 ];
 
 type Props = {
