@@ -4,8 +4,12 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+import { useAuthContext } from '../auth/AuthProvider'; // ⚠️ Asegúrate de tener este hook
 import api from '../api/axiosInstance';
-import type { Hotel } from './types'; // Verifica la ruta de importación
+import type { Hotel } from './types';
+import { Link } from 'react-router-dom'; // 👈 Importa Link para la navegación
 
 const HotelListPage: React.FC = () => {
     const [hotels, setHotels] = useState<Hotel[]>([]);
@@ -18,8 +22,7 @@ const HotelListPage: React.FC = () => {
             setError(null);
             try {
                 const token = localStorage.getItem('auth_token');
-                
-                // Si no hay token, no hacemos la petición (el PrivateRoute lo maneja)
+
                 if (!token) {
                     setLoading(false);
                     return;
@@ -43,30 +46,54 @@ const HotelListPage: React.FC = () => {
         fetchHotels();
     }, []);
 
-    // Lógica para mostrar los diferentes estados de la UI
     if (loading) {
-        return <CircularProgress />;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (error) {
-        return <Alert severity="error">{error}</Alert>;
-    }
-    
-    if (hotels.length === 0) {
-        return <Typography>Aún no hay hoteles para mostrar.</Typography>;
+        return (
+            <Box mt={2}>
+                <Alert severity="error">{error}</Alert>
+            </Box>
+        );
     }
 
     return (
         <Box>
-            <Typography variant="h4" component="h1">
-                Listado de Hoteles
-            </Typography>
-            {/* Aquí deberías mapear la lista de hoteles para mostrarlos */}
-            <ul>
-                {hotels.map((hotel) => (
-                    <li key={hotel.id}>{hotel.name}</li>
-                ))}
-            </ul>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 4,
+                }}
+            >
+                <Typography variant="h4" component="h1">
+                    Listado de Hoteles
+                </Typography>
+                <Button
+                    component={Link} // 👈 Usa Link para la navegación
+                    to="/dashboard/create-hotel" // 👈 Ruta para el formulario
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                >
+                    Crear Hotel
+                </Button>
+            </Box>
+
+            {hotels.length === 0 ? (
+                <Typography>Aún no hay hoteles para mostrar.</Typography>
+            ) : (
+                <ul>
+                    {hotels.map((hotel) => (
+                        <li key={hotel.id}>{hotel.name}</li>
+                    ))}
+                </ul>
+            )}
         </Box>
     );
 };

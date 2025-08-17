@@ -24,7 +24,7 @@ class StoreHotelRequest extends FormRequest
             // Validación de los datos del hotel
             'name' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:255'],
-            'nit' => ['required', 'string', 'max:10', 'min:10', 'unique:hotels,nit'],
+            'nit' => ['required', 'string', 'max:20', 'min:5', 'unique:hotels,nit'],
             'rooms_total' => ['required', 'integer', 'min:1'],
             'city_id' => ['required', 'exists:cities,id'],
 

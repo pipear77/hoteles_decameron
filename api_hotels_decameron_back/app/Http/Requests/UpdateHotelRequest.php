@@ -29,7 +29,7 @@ class UpdateHotelRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'address' => ['sometimes', 'required', 'string', 'max:255'],
             // La validación del NIT ignora el hotel que se está actualizando.
-            'nit' => ['sometimes', 'required', 'string', 'max:10', 'min:10',
+            'nit' => ['sometimes', 'required', 'string', 'max:20', 'min:5',
                 Rule::unique('hotels', 'nit')->ignore($hotelId, 'id')],
             'rooms_total' => ['sometimes', 'required', 'integer', 'min:1'],
             'city_id' => ['sometimes', 'required', 'exists:cities,id'],
