@@ -1,0 +1,109 @@
+/* src/auth/LoginPage.css */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: var(--color-gray-100);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 24rem;
+    background-color: var(--color-white);
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.login-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--color-gray-900);
+    margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+    font-size: 1.125rem;
+    color: var(--color-gray-600);
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-gray-700);
+    margin-bottom: 0.25rem;
+}
+
+.input-field {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    color: var(--color-gray-900);
+    background-color: #F9FAFB;
+    border: 1px solid #D1D5DB;
+    border-radius: 0.5rem;
+    outline: none;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.input-field:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+}
+
+.login-button {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--color-white);
+    background-color: var(--color-indigo-600);
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    outline: none;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.login-button:hover {
+    background-color: var(--color-indigo-700);
+}
+
+.login-button:active {
+    transform: scale(0.95);
+}
+
+.login-button:disabled {
+    background-color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: var(--color-red-600);
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}
+
+.success-message {
+    color: var(--color-green-600);
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}

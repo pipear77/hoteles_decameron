@@ -1,0 +1,12 @@
+.hotel-list-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f3f4f6;
+}
+
+.hotel-list-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}

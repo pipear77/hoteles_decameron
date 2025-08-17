@@ -1,31 +1,30 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "../auth/LoginPage";
-import DashboardLayout from "../layout/DashboardLayout";
-import HotelListPage from "../hotels/HotelListPage";
+// src/routes/AppRoutes.tsx
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from '../auth/LoginPage';
+import DashboardPage from '../layout/DashboardPage';
+import HotelListPage from '../hotels/HotelListPage';
+import PrivateRoute from './PrivateRoute';
+import HotelCreatePage from '../hotels/HotelCreatePage';
 
-function PrivateRoute({ children }: { children: React.ReactElement }) {
-    const token = localStorage.getItem("token");
-    return token ? children : <Navigate to="/login" />;
-}
-
-export default function AppRoutes() {
+const AppRoutes: React.FC = () => {
     return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route
-                    path="/*"
-                    element={
-                        <PrivateRoute>
-                            <DashboardLayout>
-                                <Routes>
-                                    <Route path="/" element={<HotelListPage />} />
-                                </Routes>
-                            </DashboardLayout>
-                        </PrivateRoute>
-                    }
-                />
-            </Routes>
-        </BrowserRouter>
+        <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+                path="/dashboard"
+                element={
+                    <PrivateRoute>
+                        <DashboardPage />
+                    </PrivateRoute>
+                }
+            >
+                <Route index element={<HotelListPage />} />
+                <Route path="create-hotel" element={<HotelCreatePage />} /> {/* 👈 */}
+            </Route>
+        </Routes>
     );
-}
+};
+
+export default AppRoutes;

@@ -1,67 +1,87 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "./useAuth";
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import {
+    Box,
+    Typography,
+    TextField,
+    Button,
+    CircularProgress,
+    Alert
+} from '@mui/material';
+import { useAuthContext } from './AuthProvider';
 
-export default function LoginPage() {
-    const { login } = useAuth();
-    const nav = useNavigate();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [err, setErr] = useState<string | null>(null);
+const LoginPage = () => {
+    const { loading, error, login, isAuthenticated } = useAuthContext();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
-    const onSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setErr(null);
-        setLoading(true);
-        try {
-            await login(email, password);
-            nav("/");
-        } catch (e: any) {
-            setErr(e?.response?.data?.message || "Credenciales inválidas");
-        } finally {
-            setLoading(false);
+        if (!email || !password) return;
+
+        await login({ email, password });
+
+        // si se autentica, redirige
+        if (!error) {
+            navigate('/dashboard');
         }
     };
 
     return (
-        <div className="min-h-screen grid place-items-center bg-gray-100 p-4">
-            <form onSubmit={onSubmit} className="w-full max-w-sm bg-white shadow rounded-2xl p-6 space-y-4">
-                <h1 className="text-xl font-semibold text-gray-800">Iniciar sesión</h1>
+        <Box
+            sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '100vh',
+                p: 2,
+                bgcolor: 'grey.100',
+            }}
+        >
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+                <Box sx={{ width: '100%', maxWidth: 400, p: 4, bgcolor: 'background.paper', borderRadius: '24px', boxShadow: 3 }}>
+                    <Typography component="h1" variant="h4" sx={{ mb: 1, fontWeight: 'bold' }}>
+                        Gestión de Hoteles
+                    </Typography>
+                    <Typography variant="body1" sx={{ mb: 3 }}>
+                        Inicia sesión para continuar
+                    </Typography>
 
-                <div>
-                    <label className="block text-sm mb-1">Email</label>
-                    <input
-                        type="email"
-                        className="w-full border rounded-lg px-3 py-2 outline-none focus:ring"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        autoFocus
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm mb-1">Contraseña</label>
-                    <input
-                        type="password"
-                        className="w-full border rounded-lg px-3 py-2 outline-none focus:ring"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-
-                {err && <p className="text-sm text-red-600">{err}</p>}
-
-                <button
-                    type="submit"
-                    className="w-full rounded-lg py-2 bg-blue-600 text-white font-medium disabled:opacity-50"
-                    disabled={loading}
-                >
-                    {loading ? "Ingresando..." : "Entrar"}
-                </button>
-            </form>
-        </div>
+                    <Box component="form" onSubmit={handleSubmit} noValidate>
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            label="Correo Electrónico"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                        <TextField
+                            margin="normal"
+                            required
+                            fullWidth
+                            label="Contraseña"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2, borderRadius: '24px', py: 2 }}
+                            disabled={loading}
+                        >
+                            {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Iniciar Sesión'}
+                        </Button>
+                        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+                    </Box>
+                </Box>
+            </motion.div>
+        </Box>
     );
-}
+};
+
+export default LoginPage;

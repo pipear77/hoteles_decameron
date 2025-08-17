@@ -35,6 +35,7 @@ class kernel extends HttpKernel
         'api' => [
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api', // Middleware común y útil para APIs
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Http\Middleware\HandleCors::class,
         ],
     ];
 
