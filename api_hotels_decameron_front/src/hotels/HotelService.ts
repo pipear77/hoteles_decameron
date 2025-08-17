@@ -1,20 +1,32 @@
+// src/hotels/HotelService.ts
 import api from "../api/axiosInstance";
-import type { HotelPayload } from "./types";
+import type { Hotel, HotelPayload } from "./types";
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+        throw new Error('No se encontró el token de autenticación.');
+    }
+    return { 'Authorization': `Bearer ${token}` };
+};
 
 export const HotelService = {
-    async getAll() {
-        const { data } = await api.get("/hotels");
-        return Array.isArray(data) ? data : data?.data; // soporta API Resource
+    getAll: async (): Promise<Hotel[]> => {
+        const response = await api.get('/hotels', { headers: getAuthHeaders() });
+        return response.data.data;
     },
-    async create(payload: HotelPayload) {
-        const { data } = await api.post("/hotels", payload);
-        return data;
+
+    create: async (payload: HotelPayload): Promise<Hotel> => {
+        const response = await api.post('/hotels', payload, { headers: getAuthHeaders() });
+        return response.data.data;
     },
-    async update(id: number, payload: Partial<HotelPayload>) {
-        const { data } = await api.put(`/hotels/${id}`, payload);
-        return data;
+
+    update: async (id: number, payload: Partial<HotelPayload>): Promise<Hotel> => {
+        const response = await api.put(`/hotels/${id}`, payload, { headers: getAuthHeaders() });
+        return response.data.data;
     },
-    async remove(id: number) {
-        await api.delete(`/hotels/${id}`);
+
+    remove: async (id: number): Promise<void> => {
+        await api.delete(`/hotels/${id}`, { headers: getAuthHeaders() });
     },
 };

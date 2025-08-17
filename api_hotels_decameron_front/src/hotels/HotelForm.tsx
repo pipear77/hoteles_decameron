@@ -189,10 +189,10 @@ export default function HotelForm({
       rooms_total: Number(form.rooms_total),
       city_id: Number(form.city_id),
       room_configurations: form.room_configurations.map((rc) => ({
-        room_type_id: Number(rc.room_type_id),
-        accommodation_id: Number(rc.accommodation_id),
-        quantity: Number(rc.quantity),
-      })),
+            room_type: ROOM_TYPES.find(rt => rt.id === rc.room_type_id)?.name || '',
+            accommodation: ACCOMMODATIONS.find(acc => acc.id === rc.accommodation_id)?.name || '',
+            quantity: Number(rc.quantity),
+        })),
     };
 
     try {

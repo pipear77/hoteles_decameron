@@ -1,50 +1,55 @@
 // src/hotels/HotelListPage.tsx
 import React, { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
+import { Box, Typography, CircularProgress, Alert, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useAuthContext } from '../auth/AuthProvider'; // ⚠️ Asegúrate de tener este hook
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import type { Hotel } from './types';
-import { Link } from 'react-router-dom'; // 👈 Importa Link para la navegación
+import { HotelService } from './HotelService'; // 👈 Importa el servicio
+import HotelCard from './HotelCard'; // 👈 Importa el nuevo componente
 
 const HotelListPage: React.FC = () => {
+    const navigate = useNavigate();
     const [hotels, setHotels] = useState<Hotel[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    const fetchHotels = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await HotelService.getAll();
+            setHotels(data);
+        } catch (err) {
+            console.error(err);
+            setError('No se pudo cargar la lista de hoteles. Intenta de nuevo más tarde.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchHotels = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const token = localStorage.getItem('auth_token');
-
-                if (!token) {
-                    setLoading(false);
-                    return;
-                }
-
-                const response = await api.get('/hotels', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                setHotels(response.data.data);
-            } catch (err) {
-                console.error(err);
-                setError('No se pudo cargar la lista de hoteles. Intenta de nuevo más tarde.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchHotels();
     }, []);
+
+    const handleEdit = (hotel: Hotel) => {
+        // Implementar la lógica para navegar a la edición del hotel
+        // Por ahora, solo muestra un mensaje
+        alert(`Navegando a la edición de ${hotel.name}`);
+        // TODO: Implementar la navegación a la página de edición
+    };
+
+    const handleDelete = async (hotel: Hotel) => {
+        if (window.confirm(`¿Estás seguro de que quieres eliminar el hotel "${hotel.name}"?`)) {
+            try {
+                await HotelService.remove(hotel.id);
+                fetchHotels(); // Refrescar la lista después de eliminar
+            } catch (err) {
+                console.error("Error al eliminar el hotel:", err);
+                setError("No se pudo eliminar el hotel. Intenta de nuevo más tarde.");
+            }
+        }
+    };
 
     if (loading) {
         return (
@@ -66,34 +71,26 @@ const HotelListPage: React.FC = () => {
         <Box>
             <Box
                 sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3,
                 }}
             >
-                <Typography variant="h4" component="h1">
-                    Listado de Hoteles
-                </Typography>
-                <Button
-                    component={Link} // 👈 Usa Link para la navegación
-                    to="/dashboard/create-hotel" // 👈 Ruta para el formulario
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                >
-                    Crear Hotel
-                </Button>
+                {hotels.length === 0 ? (
+                    <Typography className="text-lg text-center mt-10">
+                        Aún no hay hoteles para mostrar.
+                    </Typography>
+                ) : (
+                    hotels.map((hotel) => (
+                        <HotelCard
+                            key={hotel.id}
+                            hotel={hotel}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                        />
+                    ))
+                )}
             </Box>
-
-            {hotels.length === 0 ? (
-                <Typography>Aún no hay hoteles para mostrar.</Typography>
-            ) : (
-                <ul>
-                    {hotels.map((hotel) => (
-                        <li key={hotel.id}>{hotel.name}</li>
-                    ))}
-                </ul>
-            )}
         </Box>
     );
 };
