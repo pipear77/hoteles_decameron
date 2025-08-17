@@ -51,6 +51,11 @@ Sigue estos pasos para poner la aplicación en marcha en tu máquina local.
     php artisan serve
     ```
 
+7.  Inicio de sesión (credenciales):
+    ```bash
+    Usuario y/o correo:  gerente@example.com
+    contraseña: password
+
 #### **2. Configuración del Frontend (React/Vite)**
 
 1.  Abre una nueva terminal y navega al directorio del frontend:
