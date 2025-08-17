@@ -12,7 +12,7 @@ import {
 import { useAuthContext } from './AuthProvider';
 
 const LoginPage = () => {
-    const { loading, error, login, isAuthenticated } = useAuthContext();
+    const { loading, error, login } = useAuthContext();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();

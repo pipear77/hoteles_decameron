@@ -1,12 +1,10 @@
 // src/hotels/HotelListPage.tsx
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, CircularProgress, Alert, Button } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosInstance';
 import type { Hotel } from './types';
-import { HotelService } from './HotelService'; // 👈 Importa el servicio
-import HotelCard from './HotelCard'; // 👈 Importa el nuevo componente
+import { HotelService } from './HotelService';
+import HotelCard from './HotelCard'; 
 
 const HotelListPage: React.FC = () => {
     const navigate = useNavigate();
