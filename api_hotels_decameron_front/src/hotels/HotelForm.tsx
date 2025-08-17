@@ -189,8 +189,8 @@ export default function HotelForm({
       rooms_total: Number(form.rooms_total),
       city_id: Number(form.city_id),
       room_configurations: form.room_configurations.map((rc) => ({
-            room_type: ROOM_TYPES.find(rt => rt.id === rc.room_type_id)?.name || '',
-            accommodation: ACCOMMODATIONS.find(acc => acc.id === rc.accommodation_id)?.name || '',
+            room_type_id: rc.room_type_id,
+            accommodation_id: rc.accommodation_id,
             quantity: Number(rc.quantity),
         })),
     };
@@ -217,10 +217,6 @@ export default function HotelForm({
         boxShadow: 'shadow-lg',
       }}
     >
-      <Typography variant="h4" component="h1" mb={3} className="text-3xl">
-        {editing ? "Editar Hotel" : "Crear Hotel"}
-      </Typography>
-
       {errors.length > 0 && (
         <Alert severity="error" sx={{ mb: 2 }}>
           <ul style={{ margin: 0, paddingLeft: 20 }}>

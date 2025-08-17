@@ -33,10 +33,8 @@ const HotelListPage: React.FC = () => {
     }, []);
 
     const handleEdit = (hotel: Hotel) => {
-        // Implementar la lógica para navegar a la edición del hotel
-        // Por ahora, solo muestra un mensaje
-        alert(`Navegando a la edición de ${hotel.name}`);
-        // TODO: Implementar la navegación a la página de edición
+        // ✅ Navegamos a la nueva ruta de edición con el ID del hotel
+        navigate(`/dashboard/edit-hotel/${hotel.id}`);
     };
 
     const handleDelete = async (hotel: Hotel) => {

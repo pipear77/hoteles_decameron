@@ -6,6 +6,7 @@ import DashboardPage from '../layout/DashboardPage';
 import HotelListPage from '../hotels/HotelListPage';
 import PrivateRoute from './PrivateRoute';
 import HotelCreatePage from '../hotels/HotelCreatePage';
+import HotelEditPage from '../hotels/HotelEditPage';
 
 const AppRoutes: React.FC = () => {
     return (
@@ -21,7 +22,9 @@ const AppRoutes: React.FC = () => {
                 }
             >
                 <Route index element={<HotelListPage />} />
-                <Route path="create-hotel" element={<HotelCreatePage />} /> {/* 👈 */}
+                <Route path="create-hotel" element={<HotelCreatePage />} />
+                <Route path="edit-hotel/:id" element={<HotelEditPage />} />
+
             </Route>
         </Routes>
     );

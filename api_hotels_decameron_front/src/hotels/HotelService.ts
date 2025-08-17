@@ -29,4 +29,10 @@ export const HotelService = {
     remove: async (id: number): Promise<void> => {
         await api.delete(`/hotels/${id}`, { headers: getAuthHeaders() });
     },
+
+   // ✅ CORRECCIÓN: Implementamos la lógica para obtener un hotel por ID
+    getById: async (id: number): Promise<Hotel> => {
+        const response = await api.get(`/hotels/${id}`, { headers: getAuthHeaders() });
+        return response.data.data;
+    },
 };
