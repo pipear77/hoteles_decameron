@@ -96,4 +96,4 @@ Esta guía asume que utilizarás **Vercel** para el frontend y **Render** para e
 
 ### **Créditos**
 
-Desarrollado con ❤️ por el equipo de "Gestión de Hoteles Decameron".
+Desarrollado por Juan Felipe Alvarez Ruales.
